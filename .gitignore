@@ -1,0 +1,15 @@
+abi/
+artifacts/
+cache/
+coverage/
+exports/
+node_modules/
+types/
+coverage.json
+.env
+.DS_Store
+scripts/
+README.md
+.idea
+.tools/
+test/
