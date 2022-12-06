@@ -49,14 +49,14 @@ contract LevvyTimelock is ILevvyTimelock {
     event SignalSetGov(address target, address gov, bytes32 action);
     event SignalSetPriceFeed(address vault, address priceFeed, bytes32 action);
     event SignalAddPlugin(address router, address plugin, bytes32 action);
-    event SignalRedeemUsdg(address vault, address token, uint256 amount);
+    event SignalRedeemUsdl(address vault, address token, uint256 amount);
     event SignalVaultSetTokenConfig(
         address vault,
         address token,
         uint256 tokenDecimals,
         uint256 tokenWeight,
         uint256 minProfitBps,
-        uint256 maxUsdgAmount,
+        uint256 maxUsdlAmount,
         bool isStable,
         bool isShortable
     );
@@ -177,7 +177,7 @@ contract LevvyTimelock is ILevvyTimelock {
         address _token,
         uint256 _tokenWeight,
         uint256 _minProfitBps,
-        uint256 _maxUsdgAmount,
+        uint256 _maxUsdlAmount,
         uint256 _bufferAmount,
         uint256 _usdlAmount
     ) external onlyAdmin {
@@ -195,14 +195,14 @@ contract LevvyTimelock is ILevvyTimelock {
             tokenDecimals,
             _tokenWeight,
             _minProfitBps,
-            _maxUsdgAmount,
+            _maxUsdlAmount,
             isStable,
             isShortable
         );
 
         IVault(_vault).setBufferAmount(_token, _bufferAmount);
 
-        IVault(_vault).setUsdgAmount(_token, _usdlAmount);
+        IVault(_vault).setUsdlAmount(_token, _usdlAmount);
     }
 
     function setMaxGlobalShortSize(address _vault, address _token, uint256 _amount) external onlyAdmin {
@@ -375,14 +375,14 @@ contract LevvyTimelock is ILevvyTimelock {
         IRouter(_router).addPlugin(_plugin);
     }
 
-    function signalRedeemUsdg(address _vault, address _token, uint256 _amount) external onlyAdmin {
-        bytes32 action = keccak256(abi.encodePacked("redeemUsdg", _vault, _token, _amount));
+    function signalRedeemUsdl(address _vault, address _token, uint256 _amount) external onlyAdmin {
+        bytes32 action = keccak256(abi.encodePacked("redeemUsdl", _vault, _token, _amount));
         _setPendingAction(action);
-        emit SignalRedeemUsdg(_vault, _token, _amount);
+        emit SignalRedeemUsdl(_vault, _token, _amount);
     }
 
-    function redeemUsdg(address _vault, address _token, uint256 _amount) external onlyAdmin {
-        bytes32 action = keccak256(abi.encodePacked("redeemUsdg", _vault, _token, _amount));
+    function redeemUsdl(address _vault, address _token, uint256 _amount) external onlyAdmin {
+        bytes32 action = keccak256(abi.encodePacked("redeemUsdl", _vault, _token, _amount));
         _validateAction(action);
         _clearAction(action);
 
@@ -405,7 +405,7 @@ contract LevvyTimelock is ILevvyTimelock {
         uint256 _tokenDecimals,
         uint256 _tokenWeight,
         uint256 _minProfitBps,
-        uint256 _maxUsdgAmount,
+        uint256 _maxUsdlAmount,
         bool _isStable,
         bool _isShortable
     ) external onlyAdmin {
@@ -416,7 +416,7 @@ contract LevvyTimelock is ILevvyTimelock {
             _tokenDecimals,
             _tokenWeight,
             _minProfitBps,
-            _maxUsdgAmount,
+            _maxUsdlAmount,
             _isStable,
             _isShortable
         ));
@@ -429,7 +429,7 @@ contract LevvyTimelock is ILevvyTimelock {
             _tokenDecimals,
             _tokenWeight,
             _minProfitBps,
-            _maxUsdgAmount,
+            _maxUsdlAmount,
             _isStable,
             _isShortable
         );
@@ -441,7 +441,7 @@ contract LevvyTimelock is ILevvyTimelock {
         uint256 _tokenDecimals,
         uint256 _tokenWeight,
         uint256 _minProfitBps,
-        uint256 _maxUsdgAmount,
+        uint256 _maxUsdlAmount,
         bool _isStable,
         bool _isShortable
     ) external onlyAdmin {
@@ -452,7 +452,7 @@ contract LevvyTimelock is ILevvyTimelock {
             _tokenDecimals,
             _tokenWeight,
             _minProfitBps,
-            _maxUsdgAmount,
+            _maxUsdlAmount,
             _isStable,
             _isShortable
         ));
@@ -465,7 +465,7 @@ contract LevvyTimelock is ILevvyTimelock {
             _tokenDecimals,
             _tokenWeight,
             _minProfitBps,
-            _maxUsdgAmount,
+            _maxUsdlAmount,
             _isStable,
             _isShortable
         );

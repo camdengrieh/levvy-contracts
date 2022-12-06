@@ -7,6 +7,7 @@ require("hardhat-gas-reporter");
 require("hardhat-contract-sizer");
 require("hardhat-storage-layout");
 require("dotenv").config();
+const { DEPLOY_KEY } = require("./env.json");
 
 module.exports = {
   solidity: {
@@ -17,7 +18,7 @@ module.exports = {
           evmVersion: "constantinople",
           optimizer: {
             enabled: true,
-            runs: 200,
+            runs: 1,
           },
           outputSelection: {
             "*": {
@@ -45,21 +46,21 @@ module.exports = {
       allowUnlimitedContractSize: true,
     },
     cypress: {
-      url: "",
+      url: "https://klaytn05.fandom.finance",
       chainId: 8217,
       gas: 20000000,
       gasPrice: 250000000000,
-      accounts: [],
+      accounts: [DEPLOY_KEY],
       live: true,
       saveDeployments: true,
       tags: ["mainnet"],
     },
     baobab: {
-      url: "",
+      url: "https://api.baobab.klaytn.net:8651",
       chainId: 1001,
       gas: 20000000,
       gasPrice: 250000000000,
-      accounts: [],
+      accounts: [DEPLOY_KEY],
       live: true,
       saveDeployments: true,
       tags: ["test", "testnet"],

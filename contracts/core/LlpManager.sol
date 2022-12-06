@@ -43,7 +43,7 @@ contract LevLpManager is ReentrancyGuard, Governable, ILevLpManager {
         address account,
         address token,
         uint256 amount,
-        uint256 aumInUsdg,
+        uint256 aumInUsdl,
         uint256 levLpSupply,
         uint256 usdlAmount,
         uint256 mintAmount
@@ -53,7 +53,7 @@ contract LevLpManager is ReentrancyGuard, Governable, ILevLpManager {
         address account,
         address token,
         uint256 levLpAmount,
-        uint256 aumInUsdg,
+        uint256 aumInUsdl,
         uint256 levLpSupply,
         uint256 usdlAmount,
         uint256 amountOut
@@ -95,14 +95,14 @@ contract LevLpManager is ReentrancyGuard, Governable, ILevLpManager {
         aumDeduction = _aumDeduction;
     }
 
-    function addLiquidity(address _token, uint256 _amount, uint256 _minUsdg, uint256 _minLevLp) external override nonReentrant returns (uint256) {
+    function addLiquidity(address _token, uint256 _amount, uint256 _minUsdl, uint256 _minLevLp) external override nonReentrant returns (uint256) {
         if (inPrivateMode) { revert("LevLpManager: action not enabled"); }
-        return _addLiquidity(msg.sender, msg.sender, _token, _amount, _minUsdg, _minLevLp);
+        return _addLiquidity(msg.sender, msg.sender, _token, _amount, _minUsdl, _minLevLp);
     }
 
-    function addLiquidityForAccount(address _fundingAccount, address _account, address _token, uint256 _amount, uint256 _minUsdg, uint256 _minLevLp) external override nonReentrant returns (uint256) {
+    function addLiquidityForAccount(address _fundingAccount, address _account, address _token, uint256 _amount, uint256 _minUsdl, uint256 _minLevLp) external override nonReentrant returns (uint256) {
         _validateHandler();
-        return _addLiquidity(_fundingAccount, _account, _token, _amount, _minUsdg, _minLevLp);
+        return _addLiquidity(_fundingAccount, _account, _token, _amount, _minUsdl, _minLevLp);
     }
 
     function removeLiquidity(address _tokenOut, uint256 _levLpAmount, uint256 _minOut, address _receiver) external override nonReentrant returns (uint256) {
@@ -128,7 +128,7 @@ contract LevLpManager is ReentrancyGuard, Governable, ILevLpManager {
         return amounts;
     }
 
-    function getAumInUsdg(bool maximise) public override view returns (uint256) {
+    function getAumInUsdl(bool maximise) public override view returns (uint256) {
         uint256 aum = getAum(maximise);
         return aum.mul(10 ** USDL_DECIMALS).div(PRICE_PRECISION);
     }
@@ -206,25 +206,25 @@ contract LevLpManager is ReentrancyGuard, Governable, ILevLpManager {
             .div(BASIS_POINTS_DIVISOR);
     }
 
-    function _addLiquidity(address _fundingAccount, address _account, address _token, uint256 _amount, uint256 _minUsdg, uint256 _minLevLp) private returns (uint256) {
+    function _addLiquidity(address _fundingAccount, address _account, address _token, uint256 _amount, uint256 _minUsdl, uint256 _minLevLp) private returns (uint256) {
         require(_amount > 0, "LevLpManager: invalid _amount");
 
         // calculate aum before buyUSDL
-        uint256 aumInUsdg = getAumInUsdg(true);
+        uint256 aumInUsdl = getAumInUsdl(true);
         uint256 levLpSupply = IERC20(levLp).totalSupply();
 
         IERC20(_token).safeTransferFrom(_fundingAccount, address(vault), _amount);
         uint256 usdlAmount = vault.buyUSDL(_token, address(this));
-        require(usdlAmount >= _minUsdg, "LevLpManager: insufficient USDL output");
+        require(usdlAmount >= _minUsdl, "LevLpManager: insufficient USDL output");
 
-        uint256 mintAmount = aumInUsdg == 0 ? usdlAmount : usdlAmount.mul(levLpSupply).div(aumInUsdg);
+        uint256 mintAmount = aumInUsdl == 0 ? usdlAmount : usdlAmount.mul(levLpSupply).div(aumInUsdl);
         require(mintAmount >= _minLevLp, "LevLpManager: insufficient LLP output");
 
         IMintable(levLp).mint(_account, mintAmount);
 
         lastAddedAt[_account] = block.timestamp;
 
-        emit AddLiquidity(_account, _token, _amount, aumInUsdg, levLpSupply, usdlAmount, mintAmount);
+        emit AddLiquidity(_account, _token, _amount, aumInUsdl, levLpSupply, usdlAmount, mintAmount);
 
         return mintAmount;
     }
@@ -234,10 +234,10 @@ contract LevLpManager is ReentrancyGuard, Governable, ILevLpManager {
         require(lastAddedAt[_account].add(cooldownDuration) <= block.timestamp, "LevLpManager: cooldown duration not yet passed");
 
         // calculate aum before sellUSDL
-        uint256 aumInUsdg = getAumInUsdg(false);
+        uint256 aumInUsdl = getAumInUsdl(false);
         uint256 levLpSupply = IERC20(levLp).totalSupply();
 
-        uint256 usdlAmount = _levLpAmount.mul(aumInUsdg).div(levLpSupply);
+        uint256 usdlAmount = _levLpAmount.mul(aumInUsdl).div(levLpSupply);
         uint256 usdlBalance = IERC20(usdl).balanceOf(address(this));
         if (usdlAmount > usdlBalance) {
             IUSDL(usdl).mint(address(this), usdlAmount.sub(usdlBalance));
@@ -249,7 +249,7 @@ contract LevLpManager is ReentrancyGuard, Governable, ILevLpManager {
         uint256 amountOut = vault.sellUSDL(_tokenOut, _receiver);
         require(amountOut >= _minOut, "LevLpManager: insufficient output");
 
-        emit RemoveLiquidity(_account, _tokenOut, _levLpAmount, aumInUsdg, levLpSupply, usdlAmount, amountOut);
+        emit RemoveLiquidity(_account, _tokenOut, _levLpAmount, aumInUsdl, levLpSupply, usdlAmount, amountOut);
 
         return amountOut;
     }

@@ -23,7 +23,7 @@ interface IVault {
     function hasDynamicFees() external view returns (bool);
     function fundingInterval() external view returns (uint256);
     function totalTokenWeights() external view returns (uint256);
-    function getTargetUsdgAmount(address _token) external view returns (uint256);
+    function getTargetUsdlAmount(address _token) external view returns (uint256);
 
     function inManagerMode() external view returns (bool);
     function inPrivateLiquidationMode() external view returns (bool);
@@ -44,7 +44,7 @@ interface IVault {
     function setIsSwapEnabled(bool _isSwapEnabled) external;
     function setIsLeverageEnabled(bool _isLeverageEnabled) external;
     function setMaxGasPrice(uint256 _maxGasPrice) external;
-    function setUsdgAmount(address _token, uint256 _amount) external;
+    function setUsdlAmount(address _token, uint256 _amount) external;
     function setBufferAmount(address _token, uint256 _amount) external;
     function setMaxGlobalShortSize(address _token, uint256 _amount) external;
     function setInPrivateLiquidationMode(bool _inPrivateLiquidationMode) external;
@@ -69,7 +69,7 @@ interface IVault {
         uint256 _tokenDecimals,
         uint256 _redemptionBps,
         uint256 _minProfitBps,
-        uint256 _maxUsdgAmount,
+        uint256 _maxUsdlAmount,
         bool _isStable,
         bool _isShortable
     ) external;
@@ -118,7 +118,7 @@ interface IVault {
     function bufferAmounts(address _token) external view returns (uint256);
     function reservedAmounts(address _token) external view returns (uint256);
     function usdlAmounts(address _token) external view returns (uint256);
-    function maxUsdgAmounts(address _token) external view returns (uint256);
+    function maxUsdlAmounts(address _token) external view returns (uint256);
     function getRedemptionAmount(address _token, uint256 _usdlAmount) external view returns (uint256);
     function getMaxPrice(address _token) external view returns (uint256);
     function getMinPrice(address _token) external view returns (uint256);

@@ -49,14 +49,14 @@ contract Reader is Governable {
             amountIn = availableAmount.mul(priceOut).div(priceIn).mul(10 ** tokenInDecimals).div(10 ** tokenOutDecimals);
         }
 
-        uint256 maxUsdgAmount = _vault.maxUsdgAmounts(_tokenIn);
+        uint256 maxUsdlAmount = _vault.maxUsdlAmounts(_tokenIn);
 
-        if (maxUsdgAmount != 0) {
-            if (maxUsdgAmount < _vault.usdlAmounts(_tokenIn)) {
+        if (maxUsdlAmount != 0) {
+            if (maxUsdlAmount < _vault.usdlAmounts(_tokenIn)) {
                 return 0;
             }
 
-            uint256 maxAmountIn = maxUsdgAmount.sub(_vault.usdlAmounts(_tokenIn));
+            uint256 maxAmountIn = maxUsdlAmount.sub(_vault.usdlAmounts(_tokenIn));
             maxAmountIn = maxAmountIn.mul(10 ** tokenInDecimals).div(10 ** USDL_DECIMALS);
             maxAmountIn = maxAmountIn.mul(PRICE_PRECISION).div(priceIn);
 
@@ -316,7 +316,7 @@ contract Reader is Governable {
             amounts[i * propsLength + 3] = vault.getRedemptionAmount(token, _usdlAmount);
             amounts[i * propsLength + 4] = vault.tokenWeights(token);
             amounts[i * propsLength + 5] = vault.bufferAmounts(token);
-            amounts[i * propsLength + 6] = vault.maxUsdgAmounts(token);
+            amounts[i * propsLength + 6] = vault.maxUsdlAmounts(token);
             amounts[i * propsLength + 7] = vault.getMinPrice(token);
             amounts[i * propsLength + 8] = vault.getMaxPrice(token);
             amounts[i * propsLength + 9] = vault.guaranteedUsd(token);
@@ -347,7 +347,7 @@ contract Reader is Governable {
             amounts[i * propsLength + 3] = vault.getRedemptionAmount(token, _usdlAmount);
             amounts[i * propsLength + 4] = vault.tokenWeights(token);
             amounts[i * propsLength + 5] = vault.bufferAmounts(token);
-            amounts[i * propsLength + 6] = vault.maxUsdgAmounts(token);
+            amounts[i * propsLength + 6] = vault.maxUsdlAmounts(token);
             amounts[i * propsLength + 7] = vault.globalShortSizes(token);
             amounts[i * propsLength + 8] = maxGlobalShortSize;
             amounts[i * propsLength + 9] = vault.getMinPrice(token);

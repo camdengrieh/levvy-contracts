@@ -412,7 +412,7 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         );
     }
 
-    function getUsdgMinPrice(address _otherToken) public view returns (uint256) {
+    function getUsdlMinPrice(address _otherToken) public view returns (uint256) {
         // USDL_PRECISION is the same as 1 USDL
         uint256 redemptionAmount = IVault(vault).getRedemptionAmount(_otherToken, USDL_PRECISION);
         uint256 otherTokenPrice = IVault(vault).getMinPrice(_otherToken);
@@ -442,7 +442,7 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         // That's why in such scenario KLAY should be used to determine price of USDL
         if (tokenA == usdl) {
             // with both _path.length == 2 or 3 we need usdl price against _path[1]
-            tokenAPrice = getUsdgMinPrice(_path[1]);
+            tokenAPrice = getUsdlMinPrice(_path[1]);
         } else {
             tokenAPrice = IVault(vault).getMinPrice(tokenA);
         }

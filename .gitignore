@@ -13,4 +13,4 @@ README.md
 .idea
 .tools/
 test/
-.env.json
+env.json

@@ -27,7 +27,7 @@ contract VaultReader {
             amounts[i * propsLength + 3] = vault.getRedemptionAmount(token, _usdlAmount);
             amounts[i * propsLength + 4] = vault.tokenWeights(token);
             amounts[i * propsLength + 5] = vault.bufferAmounts(token);
-            amounts[i * propsLength + 6] = vault.maxUsdgAmounts(token);
+            amounts[i * propsLength + 6] = vault.maxUsdlAmounts(token);
             amounts[i * propsLength + 7] = vault.globalShortSizes(token);
             amounts[i * propsLength + 8] = positionManager.maxGlobalShortSizes(token);
             amounts[i * propsLength + 9] = vault.getMinPrice(token);
@@ -60,7 +60,7 @@ contract VaultReader {
             amounts[i * propsLength + 3] = vault.getRedemptionAmount(token, _usdlAmount);
             amounts[i * propsLength + 4] = vault.tokenWeights(token);
             amounts[i * propsLength + 5] = vault.bufferAmounts(token);
-            amounts[i * propsLength + 6] = vault.maxUsdgAmounts(token);
+            amounts[i * propsLength + 6] = vault.maxUsdlAmounts(token);
             amounts[i * propsLength + 7] = vault.globalShortSizes(token);
             amounts[i * propsLength + 8] = positionManager.maxGlobalShortSizes(token);
             amounts[i * propsLength + 9] = positionManager.maxGlobalLongSizes(token);

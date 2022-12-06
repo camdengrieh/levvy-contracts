@@ -99,8 +99,8 @@ contract Vault is ReentrancyGuard, IVault {
     // usdlAmounts tracks the amount of USDL debt for each whitelisted token
     mapping (address => uint256) public override usdlAmounts;
 
-    // maxUsdgAmounts allows setting a max amount of USDL debt for a token
-    mapping (address => uint256) public override maxUsdgAmounts;
+    // maxUsdlAmounts allows setting a max amount of USDL debt for a token
+    mapping (address => uint256) public override maxUsdlAmounts;
 
     // poolAmounts tracks the number of received tokens that can be used for leverage
     // this is tracked separately from tokenBalances to exclude funds that are deposited as margin collateral
@@ -204,8 +204,8 @@ contract Vault is ReentrancyGuard, IVault {
     event DirectPoolDeposit(address token, uint256 amount);
     event IncreasePoolAmount(address token, uint256 amount);
     event DecreasePoolAmount(address token, uint256 amount);
-    event IncreaseUsdgAmount(address token, uint256 amount);
-    event DecreaseUsdgAmount(address token, uint256 amount);
+    event IncreaseUsdlAmount(address token, uint256 amount);
+    event DecreaseUsdlAmount(address token, uint256 amount);
     event IncreaseReservedAmount(address token, uint256 amount);
     event DecreaseReservedAmount(address token, uint256 amount);
     event IncreaseGuaranteedUsd(address token, uint256 amount);
@@ -362,7 +362,7 @@ contract Vault is ReentrancyGuard, IVault {
         uint256 _tokenDecimals,
         uint256 _tokenWeight,
         uint256 _minProfitBps,
-        uint256 _maxUsdgAmount,
+        uint256 _maxUsdlAmount,
         bool _isStable,
         bool _isShortable
     ) external override {
@@ -380,7 +380,7 @@ contract Vault is ReentrancyGuard, IVault {
         tokenDecimals[_token] = _tokenDecimals;
         tokenWeights[_token] = _tokenWeight;
         minProfitBasisPoints[_token] = _minProfitBps;
-        maxUsdgAmounts[_token] = _maxUsdgAmount;
+        maxUsdlAmounts[_token] = _maxUsdlAmount;
         stableTokens[_token] = _isStable;
         shortableTokens[_token] = _isShortable;
 
@@ -398,7 +398,7 @@ contract Vault is ReentrancyGuard, IVault {
         delete tokenDecimals[_token];
         delete tokenWeights[_token];
         delete minProfitBasisPoints[_token];
-        delete maxUsdgAmounts[_token];
+        delete maxUsdlAmounts[_token];
         delete stableTokens[_token];
         delete shortableTokens[_token];
         whitelistedTokenCount = whitelistedTokenCount.sub(1);
@@ -421,16 +421,16 @@ contract Vault is ReentrancyGuard, IVault {
         approvedRouters[msg.sender][_router] = false;
     }
 
-    function setUsdgAmount(address _token, uint256 _amount) external override {
+    function setUsdlAmount(address _token, uint256 _amount) external override {
         _onlyGov();
 
         uint256 usdlAmount = usdlAmounts[_token];
         if (_amount > usdlAmount) {
-            _increaseUsdgAmount(_token, _amount.sub(usdlAmount));
+            _increaseUsdlAmount(_token, _amount.sub(usdlAmount));
             return;
         }
 
-        _decreaseUsdgAmount(_token, usdlAmount.sub(_amount));
+        _decreaseUsdlAmount(_token, usdlAmount.sub(_amount));
     }
 
     // the governance controlling this function should have a timelock
@@ -465,12 +465,12 @@ contract Vault is ReentrancyGuard, IVault {
         usdlAmount = adjustForDecimals(usdlAmount, _token, usdl);
         _validate(usdlAmount > 0, 18);
 
-        uint256 feeBasisPoints = vaultUtils.getBuyUsdgFeeBasisPoints(_token, usdlAmount);
+        uint256 feeBasisPoints = vaultUtils.getBuyUsdlFeeBasisPoints(_token, usdlAmount);
         uint256 amountAfterFees = _collectSwapFees(_token, tokenAmount, feeBasisPoints);
         uint256 mintAmount = amountAfterFees.mul(price).div(PRICE_PRECISION);
         mintAmount = adjustForDecimals(mintAmount, _token, usdl);
 
-        _increaseUsdgAmount(_token, mintAmount);
+        _increaseUsdlAmount(_token, mintAmount);
         _increasePoolAmount(_token, amountAfterFees);
 
         IUSDL(usdl).mint(_receiver, mintAmount);
@@ -494,7 +494,7 @@ contract Vault is ReentrancyGuard, IVault {
         uint256 redemptionAmount = getRedemptionAmount(_token, usdlAmount);
         _validate(redemptionAmount > 0, 21);
 
-        _decreaseUsdgAmount(_token, usdlAmount);
+        _decreaseUsdlAmount(_token, usdlAmount);
         _decreasePoolAmount(_token, redemptionAmount);
 
         IUSDL(usdl).burn(address(this), usdlAmount);
@@ -505,7 +505,7 @@ contract Vault is ReentrancyGuard, IVault {
         // be manually called to record the decrease in tokens
         _updateTokenBalance(usdl);
 
-        uint256 feeBasisPoints = vaultUtils.getSellUsdgFeeBasisPoints(_token, usdlAmount);
+        uint256 feeBasisPoints = vaultUtils.getSellUsdlFeeBasisPoints(_token, usdlAmount);
         uint256 amountOut = _collectSwapFees(_token, redemptionAmount, feeBasisPoints);
         _validate(amountOut > 0, 22);
 
@@ -544,8 +544,8 @@ contract Vault is ReentrancyGuard, IVault {
         uint256 feeBasisPoints = vaultUtils.getSwapFeeBasisPoints(_tokenIn, _tokenOut, usdlAmount);
         uint256 amountOutAfterFees = _collectSwapFees(_tokenOut, amountOut, feeBasisPoints);
 
-        _increaseUsdgAmount(_tokenIn, usdlAmount);
-        _decreaseUsdgAmount(_tokenOut, usdlAmount);
+        _increaseUsdlAmount(_tokenIn, usdlAmount);
+        _decreaseUsdlAmount(_tokenOut, usdlAmount);
 
         _increasePoolAmount(_tokenIn, amountIn);
         _decreasePoolAmount(_tokenOut, amountOut);
@@ -982,7 +982,7 @@ contract Vault is ReentrancyGuard, IVault {
         return vaultUtils.getFeeBasisPoints(_token, _usdlDelta, _feeBasisPoints, _taxBasisPoints, _increment);
     }
 
-    function getTargetUsdgAmount(address _token) public override view returns (uint256) {
+    function getTargetUsdlAmount(address _token) public override view returns (uint256) {
         uint256 supply = IERC20(usdl).totalSupply();
         if (supply == 0) { return 0; }
         uint256 weight = tokenWeights[_token];
@@ -1149,27 +1149,27 @@ contract Vault is ReentrancyGuard, IVault {
         }
     }
 
-    function _increaseUsdgAmount(address _token, uint256 _amount) private {
+    function _increaseUsdlAmount(address _token, uint256 _amount) private {
         usdlAmounts[_token] = usdlAmounts[_token].add(_amount);
-        uint256 maxUsdgAmount = maxUsdgAmounts[_token];
-        if (maxUsdgAmount != 0) {
-            _validate(usdlAmounts[_token] <= maxUsdgAmount, 51);
+        uint256 maxUsdlAmount = maxUsdlAmounts[_token];
+        if (maxUsdlAmount != 0) {
+            _validate(usdlAmounts[_token] <= maxUsdlAmount, 51);
         }
-        emit IncreaseUsdgAmount(_token, _amount);
+        emit IncreaseUsdlAmount(_token, _amount);
     }
 
-    function _decreaseUsdgAmount(address _token, uint256 _amount) private {
+    function _decreaseUsdlAmount(address _token, uint256 _amount) private {
         uint256 value = usdlAmounts[_token];
         // since USDL can be minted using multiple assets
         // it is possible for the USDL debt for a single asset to be less than zero
         // the USDL debt is capped to zero for this case
         if (value <= _amount) {
             usdlAmounts[_token] = 0;
-            emit DecreaseUsdgAmount(_token, value);
+            emit DecreaseUsdlAmount(_token, value);
             return;
         }
         usdlAmounts[_token] = value.sub(_amount);
-        emit DecreaseUsdgAmount(_token, _amount);
+        emit DecreaseUsdlAmount(_token, _amount);
     }
 
     function _increaseReservedAmount(address _token, uint256 _amount) private {

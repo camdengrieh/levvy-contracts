@@ -113,11 +113,11 @@ contract VaultUtils is IVaultUtils, Governable {
         return _size.mul(fundingRate).div(FUNDING_RATE_PRECISION);
     }
 
-    function getBuyUsdgFeeBasisPoints(address _token, uint256 _usdlAmount) public override view returns (uint256) {
+    function getBuyUsdlFeeBasisPoints(address _token, uint256 _usdlAmount) public override view returns (uint256) {
         return getFeeBasisPoints(_token, _usdlAmount, vault.mintBurnFeeBasisPoints(), vault.taxBasisPoints(), true);
     }
 
-    function getSellUsdgFeeBasisPoints(address _token, uint256 _usdlAmount) public override view returns (uint256) {
+    function getSellUsdlFeeBasisPoints(address _token, uint256 _usdlAmount) public override view returns (uint256) {
         return getFeeBasisPoints(_token, _usdlAmount, vault.mintBurnFeeBasisPoints(), vault.taxBasisPoints(), false);
     }
 
@@ -149,7 +149,7 @@ contract VaultUtils is IVaultUtils, Governable {
             nextAmount = _usdlDelta > initialAmount ? 0 : initialAmount.sub(_usdlDelta);
         }
 
-        uint256 targetAmount = vault.getTargetUsdgAmount(_token);
+        uint256 targetAmount = vault.getTargetUsdlAmount(_token);
         if (targetAmount == 0) { return _feeBasisPoints; }
 
         uint256 initialDiff = initialAmount > targetAmount ? initialAmount.sub(targetAmount) : targetAmount.sub(initialAmount);

@@ -125,11 +125,11 @@ contract RewardRouterV2 is ReentrancyGuard, Governable {
         _unstakeLevvy(msg.sender, esLevvy, _amount, true);
     }
 
-    function mintAndStakeLevLp(address _token, uint256 _amount, uint256 _minUsdg, uint256 _minLevLp) external nonReentrant returns (uint256) {
+    function mintAndStakeLevLp(address _token, uint256 _amount, uint256 _minUsdl, uint256 _minLevLp) external nonReentrant returns (uint256) {
         require(_amount > 0, "RewardRouter: invalid _amount");
 
         address account = msg.sender;
-        uint256 levLpAmount = ILevLpManager(levLpManager).addLiquidityForAccount(account, account, _token, _amount, _minUsdg, _minLevLp);
+        uint256 levLpAmount = ILevLpManager(levLpManager).addLiquidityForAccount(account, account, _token, _amount, _minUsdl, _minLevLp);
         IRewardTracker(feeLevLpTracker).stakeForAccount(account, account, levLp, levLpAmount);
         IRewardTracker(stakedLevLpTracker).stakeForAccount(account, account, feeLevLpTracker, levLpAmount);
 
@@ -138,14 +138,14 @@ contract RewardRouterV2 is ReentrancyGuard, Governable {
         return levLpAmount;
     }
 
-    function mintAndStakeLevLpKLAY(uint256 _minUsdg, uint256 _minLevLp) external payable nonReentrant returns (uint256) {
+    function mintAndStakeLevLpKLAY(uint256 _minUsdl, uint256 _minLevLp) external payable nonReentrant returns (uint256) {
         require(msg.value > 0, "RewardRouter: invalid msg.value");
 
         IWKLAY(wklay).deposit{value: msg.value}();
         IERC20(wklay).approve(levLpManager, msg.value);
 
         address account = msg.sender;
-        uint256 levLpAmount = ILevLpManager(levLpManager).addLiquidityForAccount(address(this), account, wklay, msg.value, _minUsdg, _minLevLp);
+        uint256 levLpAmount = ILevLpManager(levLpManager).addLiquidityForAccount(address(this), account, wklay, msg.value, _minUsdl, _minLevLp);
 
         IRewardTracker(feeLevLpTracker).stakeForAccount(account, account, levLp, levLpAmount);
         IRewardTracker(stakedLevLpTracker).stakeForAccount(account, account, feeLevLpTracker, levLpAmount);
