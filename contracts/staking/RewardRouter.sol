@@ -144,7 +144,12 @@ contract RewardRouter is ReentrancyGuard, Governable {
         return levLpAmount;
     }
 
-    function unstakeAndRedeemLevLp(address _tokenOut, uint256 _levLpAmount, uint256 _minOut, address _receiver) external nonReentrant returns (uint256) {
+    function unstakeAndRedeemLevLp(
+        address _tokenOut,
+        uint256 _levLpAmount,
+        uint256 _minOut,
+        address _receiver
+    ) external nonReentrant returns (uint256) {
         require(_levLpAmount > 0, "RewardRouter: invalid _levLpAmount");
 
         address account = msg.sender;

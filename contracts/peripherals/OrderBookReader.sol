@@ -18,7 +18,7 @@ contract OrderBookReader {
     }
 
     function getIncreaseOrders(
-        address payable _orderBookAddress, 
+        address payable _orderBookAddress,
         address _account,
         uint256[] memory _indices
     ) external view returns (uint256[] memory, address[] memory) {
@@ -40,8 +40,9 @@ contract OrderBookReader {
                 bool isLong,
                 uint256 triggerPrice,
                 bool triggerAboveThreshold,
-                // uint256 executionFee
-            ) = orderBook.getIncreaseOrder(vars.account, vars.index);
+
+            ) = // uint256 executionFee
+                orderBook.getIncreaseOrder(vars.account, vars.index);
 
             uintProps[vars.i * vars.uintLength] = uint256(purchaseTokenAmount);
             uintProps[vars.i * vars.uintLength + 1] = uint256(sizeDelta);
@@ -60,7 +61,7 @@ contract OrderBookReader {
     }
 
     function getDecreaseOrders(
-        address payable _orderBookAddress, 
+        address payable _orderBookAddress,
         address _account,
         uint256[] memory _indices
     ) external view returns (uint256[] memory, address[] memory) {
@@ -81,8 +82,9 @@ contract OrderBookReader {
                 bool isLong,
                 uint256 triggerPrice,
                 bool triggerAboveThreshold,
-                // uint256 executionFee
-            ) = orderBook.getDecreaseOrder(vars.account, vars.index);
+
+            ) = // uint256 executionFee
+                orderBook.getDecreaseOrder(vars.account, vars.index);
 
             uintProps[vars.i * vars.uintLength] = uint256(collateralDelta);
             uintProps[vars.i * vars.uintLength + 1] = uint256(sizeDelta);
@@ -100,7 +102,7 @@ contract OrderBookReader {
     }
 
     function getSwapOrders(
-        address payable _orderBookAddress, 
+        address payable _orderBookAddress,
         address _account,
         uint256[] memory _indices
     ) external view returns (uint256[] memory, address[] memory) {
@@ -117,13 +119,14 @@ contract OrderBookReader {
                 address path0,
                 address path1,
                 address path2,
-                uint256 amountIn, 
-                uint256 minOut, 
-                uint256 triggerRatio, 
+                uint256 amountIn,
+                uint256 minOut,
+                uint256 triggerRatio,
                 bool triggerAboveThreshold,
                 bool shouldUnwrap,
-                // uint256 executionFee
-            ) = orderBook.getSwapOrder(vars.account, vars.index);
+
+            ) = // uint256 executionFee
+                orderBook.getSwapOrder(vars.account, vars.index);
 
             uintProps[vars.i * vars.uintLength] = uint256(amountIn);
             uintProps[vars.i * vars.uintLength + 1] = uint256(minOut);

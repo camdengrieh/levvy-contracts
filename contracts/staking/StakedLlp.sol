@@ -25,16 +25,11 @@ contract StakedLevLp {
     address public stakedLevLpTracker;
     address public feeLevLpTracker;
 
-    mapping (address => mapping (address => uint256)) public allowances;
+    mapping(address => mapping(address => uint256)) public allowances;
 
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
-    constructor(
-        address _levLp,
-        ILevLpManager _levLpManager,
-        address _stakedLevLpTracker,
-        address _feeLevLpTracker
-    ) public {
+    constructor(address _levLp, ILevLpManager _levLpManager, address _stakedLevLpTracker, address _feeLevLpTracker) public {
         levLp = _levLp;
         levLpManager = _levLpManager;
         stakedLevLpTracker = _stakedLevLpTracker;

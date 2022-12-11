@@ -1,6 +1,6 @@
 /**
  *Submitted for verification at Arbiscan on 2021-08-30
-*/
+ */
 
 // Sources flattened with hardhat v2.6.1 https://hardhat.org
 
@@ -12,12 +12,11 @@ pragma solidity 0.6.12;
 
 interface IUSDL {
     function mint(address _account, uint256 _amount) external;
+
     function burn(address _account, uint256 _amount) external;
 }
 
-
 // File contracts/libraries/math/SafeMath.sol
-
 
 pragma solidity 0.6.12;
 
@@ -177,9 +176,7 @@ library SafeMath {
     }
 }
 
-
 // File contracts/libraries/token/IERC20.sol
-
 
 pragma solidity 0.6.12;
 
@@ -257,9 +254,7 @@ interface IERC20 {
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
-
 // File contracts/libraries/utils/Address.sol
-
 
 pragma solidity ^0.6.2;
 
@@ -291,7 +286,9 @@ library Address {
 
         uint256 size;
         // solhint-disable-next-line no-inline-assembly
-        assembly { size := extcodesize(account) }
+        assembly {
+            size := extcodesize(account)
+        }
         return size > 0;
     }
 
@@ -315,7 +312,7 @@ library Address {
         require(address(this).balance >= amount, "Address: insufficient balance");
 
         // solhint-disable-next-line avoid-low-level-calls, avoid-call-value
-        (bool success, ) = recipient.call{ value: amount }("");
+        (bool success, ) = recipient.call{value: amount}("");
         require(success, "Address: unable to send value, recipient may have reverted");
     }
 
@@ -338,7 +335,7 @@ library Address {
      * _Available since v3.1._
      */
     function functionCall(address target, bytes memory data) internal returns (bytes memory) {
-      return functionCall(target, data, "Address: low-level call failed");
+        return functionCall(target, data, "Address: low-level call failed");
     }
 
     /**
@@ -377,7 +374,7 @@ library Address {
         require(isContract(target), "Address: call to non-contract");
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = target.call{ value: value }(data);
+        (bool success, bytes memory returndata) = target.call{value: value}(data);
         return _verifyCallResult(success, returndata, errorMessage);
     }
 
@@ -429,7 +426,7 @@ library Address {
         return _verifyCallResult(success, returndata, errorMessage);
     }
 
-    function _verifyCallResult(bool success, bytes memory returndata, string memory errorMessage) private pure returns(bytes memory) {
+    function _verifyCallResult(bool success, bytes memory returndata, string memory errorMessage) private pure returns (bytes memory) {
         if (success) {
             return returndata;
         } else {
@@ -449,13 +446,9 @@ library Address {
     }
 }
 
-
 // File contracts/libraries/token/SafeERC20.sol
 
-
 pragma solidity 0.6.12;
-
-
 
 /**
  * @title SafeERC20
@@ -490,9 +483,7 @@ library SafeERC20 {
         // or when resetting it to zero. To increase and decrease it, use
         // 'safeIncreaseAllowance' and 'safeDecreaseAllowance'
         // solhint-disable-next-line max-line-length
-        require((value == 0) || (token.allowance(address(this), spender) == 0),
-            "SafeERC20: approve from non-zero to non-zero allowance"
-        );
+        require((value == 0) || (token.allowance(address(this), spender) == 0), "SafeERC20: approve from non-zero to non-zero allowance");
         _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, value));
     }
 
@@ -518,46 +509,43 @@ library SafeERC20 {
         // the target address contains contract code and also asserts for success in the low-level call.
 
         bytes memory returndata = address(token).functionCall(data, "SafeERC20: low-level call failed");
-        if (returndata.length > 0) { // Return data is optional
+        if (returndata.length > 0) {
+            // Return data is optional
             // solhint-disable-next-line max-line-length
             require(abi.decode(returndata, (bool)), "SafeERC20: ERC20 operation did not succeed");
         }
     }
 }
 
-
 // File contracts/tokens/interfaces/IYieldTracker.sol
-
 
 pragma solidity 0.6.12;
 
 interface IYieldTracker {
     function claim(address _account, address _receiver) external returns (uint256);
+
     function updateRewards(address _account) external;
+
     function getTokensPerInterval() external view returns (uint256);
+
     function claimable(address _account) external view returns (uint256);
 }
 
-
 // File contracts/tokens/interfaces/IYieldToken.sol
-
 
 pragma solidity 0.6.12;
 
 interface IYieldToken {
     function totalStaked() external view returns (uint256);
+
     function stakedBalance(address _account) external view returns (uint256);
+
     function removeAdmin(address _account) external;
 }
 
-
 // File contracts/tokens/YieldToken.sol
 
-
 pragma solidity 0.6.12;
-
-
-
 
 contract YieldToken is IERC20, IYieldToken {
     using SafeMath for uint256;
@@ -572,15 +560,15 @@ contract YieldToken is IERC20, IYieldToken {
 
     address public gov;
 
-    mapping (address => uint256) public balances;
-    mapping (address => mapping (address => uint256)) public allowances;
+    mapping(address => uint256) public balances;
+    mapping(address => mapping(address => uint256)) public allowances;
 
     address[] public yieldTrackers;
-    mapping (address => bool) public nonStakingAccounts;
-    mapping (address => bool) public admins;
+    mapping(address => bool) public nonStakingAccounts;
+    mapping(address => bool) public admins;
 
     bool public inWhitelistMode;
-    mapping (address => bool) public whitelistedHandlers;
+    mapping(address => bool) public whitelistedHandlers;
 
     modifier onlyGov() {
         require(msg.sender == gov, "YieldToken: forbidden");
@@ -749,7 +737,7 @@ contract YieldToken is IERC20, IYieldToken {
             nonStakingSupply = nonStakingSupply.add(_amount);
         }
 
-        emit Transfer(_sender, _recipient,_amount);
+        emit Transfer(_sender, _recipient, _amount);
     }
 
     function _approve(address _owner, address _spender, uint256 _amount) private {
@@ -769,16 +757,12 @@ contract YieldToken is IERC20, IYieldToken {
     }
 }
 
-
 // File contracts/tokens/USDL.sol
-
 
 pragma solidity 0.6.12;
 
-
 contract USDL is YieldToken, IUSDL {
-
-    mapping (address => bool) public vaults;
+    mapping(address => bool) public vaults;
 
     modifier onlyVault() {
         require(vaults[msg.sender], "USDL: forbidden");

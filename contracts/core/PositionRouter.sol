@@ -63,13 +63,13 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
 
     uint256 public callbackGasLimit;
 
-    mapping (address => bool) public isPositionKeeper;
+    mapping(address => bool) public isPositionKeeper;
 
-    mapping (address => uint256) public increasePositionsIndex;
-    mapping (bytes32 => IncreasePositionRequest) public increasePositionRequests;
+    mapping(address => uint256) public increasePositionsIndex;
+    mapping(bytes32 => IncreasePositionRequest) public increasePositionRequests;
 
-    mapping (address => uint256) public decreasePositionsIndex;
-    mapping (bytes32 => DecreasePositionRequest) public decreasePositionRequests;
+    mapping(address => uint256) public decreasePositionsIndex;
+    mapping(bytes32 => DecreasePositionRequest) public decreasePositionRequests;
 
     event CreateIncreasePosition(
         address indexed account,
@@ -225,7 +225,9 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
         uint256 index = increasePositionRequestKeysStart;
         uint256 length = increasePositionRequestKeys.length;
 
-        if (index >= length) { return; }
+        if (index >= length) {
+            return;
+        }
 
         if (_endIndex > length) {
             _endIndex = length;
@@ -241,11 +243,15 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
             // higher than what the user specified, or if there is insufficient liquidity for the position
             // in case an error was thrown, cancel the request
             try this.executeIncreasePosition(key, _executionFeeReceiver) returns (bool _wasExecuted) {
-                if (!_wasExecuted) { break; }
+                if (!_wasExecuted) {
+                    break;
+                }
             } catch {
                 // wrap this call in a try catch to prevent invalid cancels from blocking the loop
                 try this.cancelIncreasePosition(key, _executionFeeReceiver) returns (bool _wasCancelled) {
-                    if (!_wasCancelled) { break; }
+                    if (!_wasCancelled) {
+                        break;
+                    }
                 } catch {}
             }
 
@@ -260,7 +266,9 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
         uint256 index = decreasePositionRequestKeysStart;
         uint256 length = decreasePositionRequestKeys.length;
 
-        if (index >= length) { return; }
+        if (index >= length) {
+            return;
+        }
 
         if (_endIndex > length) {
             _endIndex = length;
@@ -275,11 +283,15 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
             // an error could be thrown if the request is too old
             // in case an error was thrown, cancel the request
             try this.executeDecreasePosition(key, _executionFeeReceiver) returns (bool _wasExecuted) {
-                if (!_wasExecuted) { break; }
+                if (!_wasExecuted) {
+                    break;
+                }
             } catch {
                 // wrap this call in a try catch to prevent invalid cancels from blocking the loop
                 try this.cancelDecreasePosition(key, _executionFeeReceiver) returns (bool _wasCancelled) {
-                    if (!_wasCancelled) { break; }
+                    if (!_wasCancelled) {
+                        break;
+                    }
                 } catch {}
             }
 
@@ -313,19 +325,20 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
             IRouter(router).pluginTransfer(_path[0], msg.sender, address(this), _amountIn);
         }
 
-        return _createIncreasePosition(
-            msg.sender,
-            _path,
-            _indexToken,
-            _amountIn,
-            _minOut,
-            _sizeDelta,
-            _isLong,
-            _acceptablePrice,
-            _executionFee,
-            false,
-            _callbackTarget
-        );
+        return
+            _createIncreasePosition(
+                msg.sender,
+                _path,
+                _indexToken,
+                _amountIn,
+                _minOut,
+                _sizeDelta,
+                _isLong,
+                _acceptablePrice,
+                _executionFee,
+                false,
+                _callbackTarget
+            );
     }
 
     function createIncreasePositionKLAY(
@@ -348,19 +361,20 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
 
         uint256 amountIn = msg.value.sub(_executionFee);
 
-        return _createIncreasePosition(
-            msg.sender,
-            _path,
-            _indexToken,
-            amountIn,
-            _minOut,
-            _sizeDelta,
-            _isLong,
-            _acceptablePrice,
-            _executionFee,
-            true,
-            _callbackTarget
-        );
+        return
+            _createIncreasePosition(
+                msg.sender,
+                _path,
+                _indexToken,
+                amountIn,
+                _minOut,
+                _sizeDelta,
+                _isLong,
+                _acceptablePrice,
+                _executionFee,
+                true,
+                _callbackTarget
+            );
     }
 
     function createDecreasePosition(
@@ -386,20 +400,21 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
 
         _transferInKLAY();
 
-        return _createDecreasePosition(
-            msg.sender,
-            _path,
-            _indexToken,
-            _collateralDelta,
-            _sizeDelta,
-            _isLong,
-            _receiver,
-            _acceptablePrice,
-            _minOut,
-            _executionFee,
-            _withdrawKLAY,
-            _callbackTarget
-        );
+        return
+            _createDecreasePosition(
+                msg.sender,
+                _path,
+                _indexToken,
+                _collateralDelta,
+                _sizeDelta,
+                _isLong,
+                _receiver,
+                _acceptablePrice,
+                _minOut,
+                _executionFee,
+                _withdrawKLAY,
+                _callbackTarget
+            );
     }
 
     function getRequestQueueLengths() external view returns (uint256, uint256, uint256, uint256) {
@@ -414,10 +429,14 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
     function executeIncreasePosition(bytes32 _key, address payable _executionFeeReceiver) public nonReentrant returns (bool) {
         IncreasePositionRequest memory request = increasePositionRequests[_key];
         // if the request was already executed or cancelled, return true so that the executeIncreasePositions loop will continue executing the next request
-        if (request.account == address(0)) { return true; }
+        if (request.account == address(0)) {
+            return true;
+        }
 
         bool shouldExecute = _validateExecution(request.blockNumber, request.blockTime, request.account);
-        if (!shouldExecute) { return false; }
+        if (!shouldExecute) {
+            return false;
+        }
 
         delete increasePositionRequests[_key];
 
@@ -433,7 +452,14 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
             IERC20(request.path[request.path.length - 1]).safeTransfer(vault, afterFeeAmount);
         }
 
-        _increasePosition(request.account, request.path[request.path.length - 1], request.indexToken, request.sizeDelta, request.isLong, request.acceptablePrice);
+        _increasePosition(
+            request.account,
+            request.path[request.path.length - 1],
+            request.indexToken,
+            request.sizeDelta,
+            request.isLong,
+            request.acceptablePrice
+        );
 
         _transferOutKLAYWithGasLimitIgnoreFail(request.executionFee, _executionFeeReceiver);
 
@@ -459,10 +485,14 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
     function cancelIncreasePosition(bytes32 _key, address payable _executionFeeReceiver) public nonReentrant returns (bool) {
         IncreasePositionRequest memory request = increasePositionRequests[_key];
         // if the request was already executed or cancelled, return true so that the executeIncreasePositions loop will continue executing the next request
-        if (request.account == address(0)) { return true; }
+        if (request.account == address(0)) {
+            return true;
+        }
 
         bool shouldCancel = _validateCancellation(request.blockNumber, request.blockTime, request.account);
-        if (!shouldCancel) { return false; }
+        if (!shouldCancel) {
+            return false;
+        }
 
         delete increasePositionRequests[_key];
 
@@ -472,7 +502,7 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
             IERC20(request.path[0]).safeTransfer(request.account, request.amountIn);
         }
 
-       _transferOutKLAYWithGasLimitIgnoreFail(request.executionFee, _executionFeeReceiver);
+        _transferOutKLAYWithGasLimitIgnoreFail(request.executionFee, _executionFeeReceiver);
 
         emit CancelIncreasePosition(
             request.account,
@@ -496,14 +526,27 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
     function executeDecreasePosition(bytes32 _key, address payable _executionFeeReceiver) public nonReentrant returns (bool) {
         DecreasePositionRequest memory request = decreasePositionRequests[_key];
         // if the request was already executed or cancelled, return true so that the executeDecreasePositions loop will continue executing the next request
-        if (request.account == address(0)) { return true; }
+        if (request.account == address(0)) {
+            return true;
+        }
 
         bool shouldExecute = _validateExecution(request.blockNumber, request.blockTime, request.account);
-        if (!shouldExecute) { return false; }
+        if (!shouldExecute) {
+            return false;
+        }
 
         delete decreasePositionRequests[_key];
 
-        uint256 amountOut = _decreasePosition(request.account, request.path[0], request.indexToken, request.collateralDelta, request.sizeDelta, request.isLong, address(this), request.acceptablePrice);
+        uint256 amountOut = _decreasePosition(
+            request.account,
+            request.path[0],
+            request.indexToken,
+            request.collateralDelta,
+            request.sizeDelta,
+            request.isLong,
+            address(this),
+            request.acceptablePrice
+        );
 
         if (amountOut > 0) {
             if (request.path.length > 1) {
@@ -512,13 +555,13 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
             }
 
             if (request.withdrawKLAY) {
-               _transferOutKLAYWithGasLimitIgnoreFail(amountOut, payable(request.receiver));
+                _transferOutKLAYWithGasLimitIgnoreFail(amountOut, payable(request.receiver));
             } else {
-               IERC20(request.path[request.path.length - 1]).safeTransfer(request.receiver, amountOut);
+                IERC20(request.path[request.path.length - 1]).safeTransfer(request.receiver, amountOut);
             }
         }
 
-       _transferOutKLAYWithGasLimitIgnoreFail(request.executionFee, _executionFeeReceiver);
+        _transferOutKLAYWithGasLimitIgnoreFail(request.executionFee, _executionFeeReceiver);
 
         emit ExecuteDecreasePosition(
             request.account,
@@ -543,14 +586,18 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
     function cancelDecreasePosition(bytes32 _key, address payable _executionFeeReceiver) public nonReentrant returns (bool) {
         DecreasePositionRequest memory request = decreasePositionRequests[_key];
         // if the request was already executed or cancelled, return true so that the executeDecreasePositions loop will continue executing the next request
-        if (request.account == address(0)) { return true; }
+        if (request.account == address(0)) {
+            return true;
+        }
 
         bool shouldCancel = _validateCancellation(request.blockNumber, request.blockTime, request.account);
-        if (!shouldCancel) { return false; }
+        if (!shouldCancel) {
+            return false;
+        }
 
         delete decreasePositionRequests[_key];
 
-       _transferOutKLAYWithGasLimitIgnoreFail(request.executionFee, _executionFeeReceiver);
+        _transferOutKLAYWithGasLimitIgnoreFail(request.executionFee, _executionFeeReceiver);
 
         emit CancelDecreasePosition(
             request.account,
@@ -757,12 +804,7 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
         return requestKey;
     }
 
-    function _callRequestCallback(
-        address _callbackTarget,
-        bytes32 _key,
-        bool _wasExecuted,
-        bool _isIncrease
-    ) internal {
+    function _callRequestCallback(address _callbackTarget, bytes32 _key, bool _wasExecuted, bool _isIncrease) internal {
         if (_callbackTarget == address(0)) {
             return;
         }
@@ -777,7 +819,7 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
         }
 
         bool success;
-        try IPositionRouterCallbackReceiver(_callbackTarget).levvyPositionCallback{ gas: _gasLimit }(_key, _wasExecuted, _isIncrease) {
+        try IPositionRouterCallbackReceiver(_callbackTarget).levvyPositionCallback{gas: _gasLimit}(_key, _wasExecuted, _isIncrease) {
             success = true;
         } catch {}
 

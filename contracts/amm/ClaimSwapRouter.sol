@@ -23,7 +23,7 @@ contract ClaimSwapRouter is IClaimSwapRouter {
         address to,
         uint256 deadline
     ) external override returns (uint256 amountA, uint256 amountB, uint256 liquidity) {
-        require(deadline >= block.timestamp, 'ClaimSwapRouter: EXPIRED');
+        require(deadline >= block.timestamp, "ClaimSwapRouter: EXPIRED");
 
         Token(pair).mint(to, 1000);
 

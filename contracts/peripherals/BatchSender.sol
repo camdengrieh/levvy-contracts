@@ -10,14 +10,9 @@ import "../access/Governable.sol";
 contract BatchSender is Governable {
     using SafeMath for uint256;
 
-    mapping (address => bool) public isHandler;
+    mapping(address => bool) public isHandler;
 
-    event BatchSend(
-        uint256 indexed typeId,
-        address indexed token,
-        address[] accounts,
-        uint256[] amounts
-    );
+    event BatchSend(uint256 indexed typeId, address indexed token, address[] accounts, uint256[] amounts);
 
     modifier onlyHandler() {
         require(isHandler[msg.sender], "BatchSender: forbidden");

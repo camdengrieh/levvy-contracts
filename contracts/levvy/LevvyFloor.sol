@@ -26,7 +26,7 @@ contract LevvyFloor is ReentrancyGuard, TokenManager {
     uint256 public mintedSupply;
     uint256 public multiplierPrecision;
 
-    mapping (address => bool) public isHandler;
+    mapping(address => bool) public isHandler;
 
     modifier onlyHandler() {
         require(isHandler[msg.sender], "LevvyFloor: forbidden");

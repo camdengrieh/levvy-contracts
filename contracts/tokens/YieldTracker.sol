@@ -23,8 +23,8 @@ contract YieldTracker is IYieldTracker, ReentrancyGuard {
     address public distributor;
 
     uint256 public cumulativeRewardPerToken;
-    mapping (address => uint256) public claimableReward;
-    mapping (address => uint256) public previousCumulatedRewardPerToken;
+    mapping(address => uint256) public claimableReward;
+    mapping(address => uint256) public previousCumulatedRewardPerToken;
 
     event Claim(address receiver, uint256 amount);
 
@@ -65,11 +65,11 @@ contract YieldTracker is IYieldTracker, ReentrancyGuard {
         return tokenAmount;
     }
 
-    function getTokensPerInterval() external override view returns (uint256) {
+    function getTokensPerInterval() external view override returns (uint256) {
         return IDistributor(distributor).tokensPerInterval(address(this));
     }
 
-    function claimable(address _account) external override view returns (uint256) {
+    function claimable(address _account) external view override returns (uint256) {
         uint256 stakedBalance = IYieldToken(yieldToken).stakedBalance(_account);
         if (stakedBalance == 0) {
             return claimableReward[_account];
@@ -77,8 +77,10 @@ contract YieldTracker is IYieldTracker, ReentrancyGuard {
         uint256 pendingRewards = IDistributor(distributor).getDistributionAmount(address(this)).mul(PRECISION);
         uint256 totalStaked = IYieldToken(yieldToken).totalStaked();
         uint256 nextCumulativeRewardPerToken = cumulativeRewardPerToken.add(pendingRewards.div(totalStaked));
-        return claimableReward[_account].add(
-            stakedBalance.mul(nextCumulativeRewardPerToken.sub(previousCumulatedRewardPerToken[_account])).div(PRECISION));
+        return
+            claimableReward[_account].add(
+                stakedBalance.mul(nextCumulativeRewardPerToken.sub(previousCumulatedRewardPerToken[_account])).div(PRECISION)
+            );
     }
 
     function updateRewards(address _account) public override nonReentrant {

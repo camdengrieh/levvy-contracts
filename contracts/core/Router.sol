@@ -23,8 +23,8 @@ contract Router is IRouter {
     address public usdl;
     address public vault;
 
-    mapping (address => bool) public plugins;
-    mapping (address => mapping (address => bool)) public approvedPlugins;
+    mapping(address => bool) public plugins;
+    mapping(address => mapping(address => bool)) public approvedPlugins;
 
     event Swap(address account, address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOut);
 
@@ -70,12 +70,26 @@ contract Router is IRouter {
         IERC20(_token).safeTransferFrom(_account, _receiver, _amount);
     }
 
-    function pluginIncreasePosition(address _account, address _collateralToken, address _indexToken, uint256 _sizeDelta, bool _isLong) external override {
+    function pluginIncreasePosition(
+        address _account,
+        address _collateralToken,
+        address _indexToken,
+        uint256 _sizeDelta,
+        bool _isLong
+    ) external override {
         _validatePlugin(_account);
         IVault(vault).increasePosition(_account, _collateralToken, _indexToken, _sizeDelta, _isLong);
     }
 
-    function pluginDecreasePosition(address _account, address _collateralToken, address _indexToken, uint256 _collateralDelta, uint256 _sizeDelta, bool _isLong, address _receiver) external override returns (uint256) {
+    function pluginDecreasePosition(
+        address _account,
+        address _collateralToken,
+        address _indexToken,
+        uint256 _collateralDelta,
+        uint256 _sizeDelta,
+        bool _isLong,
+        address _receiver
+    ) external override returns (uint256) {
         _validatePlugin(_account);
         return IVault(vault).decreasePosition(_account, _collateralToken, _indexToken, _collateralDelta, _sizeDelta, _isLong, _receiver);
     }
@@ -106,7 +120,15 @@ contract Router is IRouter {
         emit Swap(msg.sender, _path[0], _path[_path.length - 1], _amountIn, amountOut);
     }
 
-    function increasePosition(address[] memory _path, address _indexToken, uint256 _amountIn, uint256 _minOut, uint256 _sizeDelta, bool _isLong, uint256 _price) external {
+    function increasePosition(
+        address[] memory _path,
+        address _indexToken,
+        uint256 _amountIn,
+        uint256 _minOut,
+        uint256 _sizeDelta,
+        bool _isLong,
+        uint256 _price
+    ) external {
         if (_amountIn > 0) {
             IERC20(_path[0]).safeTransferFrom(_sender(), vault, _amountIn);
         }
@@ -117,7 +139,14 @@ contract Router is IRouter {
         _increasePosition(_path[_path.length - 1], _indexToken, _sizeDelta, _isLong, _price);
     }
 
-    function increasePositionKLAY(address[] memory _path, address _indexToken, uint256 _minOut, uint256 _sizeDelta, bool _isLong, uint256 _price) external payable {
+    function increasePositionKLAY(
+        address[] memory _path,
+        address _indexToken,
+        uint256 _minOut,
+        uint256 _sizeDelta,
+        bool _isLong,
+        uint256 _price
+    ) external payable {
         require(_path[0] == wklay, "Router: invalid _path");
         if (msg.value > 0) {
             _transferKLAYToVault();
@@ -129,22 +158,56 @@ contract Router is IRouter {
         _increasePosition(_path[_path.length - 1], _indexToken, _sizeDelta, _isLong, _price);
     }
 
-    function decreasePosition(address _collateralToken, address _indexToken, uint256 _collateralDelta, uint256 _sizeDelta, bool _isLong, address _receiver, uint256 _price) external {
+    function decreasePosition(
+        address _collateralToken,
+        address _indexToken,
+        uint256 _collateralDelta,
+        uint256 _sizeDelta,
+        bool _isLong,
+        address _receiver,
+        uint256 _price
+    ) external {
         _decreasePosition(_collateralToken, _indexToken, _collateralDelta, _sizeDelta, _isLong, _receiver, _price);
     }
 
-    function decreasePositionKLAY(address _collateralToken, address _indexToken, uint256 _collateralDelta, uint256 _sizeDelta, bool _isLong, address payable _receiver, uint256 _price) external {
+    function decreasePositionKLAY(
+        address _collateralToken,
+        address _indexToken,
+        uint256 _collateralDelta,
+        uint256 _sizeDelta,
+        bool _isLong,
+        address payable _receiver,
+        uint256 _price
+    ) external {
         uint256 amountOut = _decreasePosition(_collateralToken, _indexToken, _collateralDelta, _sizeDelta, _isLong, address(this), _price);
         _transferOutKLAY(amountOut, _receiver);
     }
 
-    function decreasePositionAndSwap(address[] memory _path, address _indexToken, uint256 _collateralDelta, uint256 _sizeDelta, bool _isLong, address _receiver, uint256 _price, uint256 _minOut) external {
+    function decreasePositionAndSwap(
+        address[] memory _path,
+        address _indexToken,
+        uint256 _collateralDelta,
+        uint256 _sizeDelta,
+        bool _isLong,
+        address _receiver,
+        uint256 _price,
+        uint256 _minOut
+    ) external {
         uint256 amount = _decreasePosition(_path[0], _indexToken, _collateralDelta, _sizeDelta, _isLong, address(this), _price);
         IERC20(_path[0]).safeTransfer(vault, amount);
         _swap(_path, _minOut, _receiver);
     }
 
-    function decreasePositionAndSwapKLAY(address[] memory _path, address _indexToken, uint256 _collateralDelta, uint256 _sizeDelta, bool _isLong, address payable _receiver, uint256 _price, uint256 _minOut) external {
+    function decreasePositionAndSwapKLAY(
+        address[] memory _path,
+        address _indexToken,
+        uint256 _collateralDelta,
+        uint256 _sizeDelta,
+        bool _isLong,
+        address payable _receiver,
+        uint256 _price,
+        uint256 _minOut
+    ) external {
         require(_path[_path.length - 1] == wklay, "Router: invalid _path");
         uint256 amount = _decreasePosition(_path[0], _indexToken, _collateralDelta, _sizeDelta, _isLong, address(this), _price);
         IERC20(_path[0]).safeTransfer(vault, amount);
@@ -162,7 +225,15 @@ contract Router is IRouter {
         IVault(vault).increasePosition(_sender(), _collateralToken, _indexToken, _sizeDelta, _isLong);
     }
 
-    function _decreasePosition(address _collateralToken, address _indexToken, uint256 _collateralDelta, uint256 _sizeDelta, bool _isLong, address _receiver, uint256 _price) private returns (uint256) {
+    function _decreasePosition(
+        address _collateralToken,
+        address _indexToken,
+        uint256 _collateralDelta,
+        uint256 _sizeDelta,
+        bool _isLong,
+        address _receiver,
+        uint256 _price
+    ) private returns (uint256) {
         if (_isLong) {
             require(IVault(vault).getMinPrice(_indexToken) >= _price, "Router: mark price lower than limit");
         } else {
@@ -198,11 +269,14 @@ contract Router is IRouter {
     function _vaultSwap(address _tokenIn, address _tokenOut, uint256 _minOut, address _receiver) private returns (uint256) {
         uint256 amountOut;
 
-        if (_tokenOut == usdl) { // buyUSDL
+        if (_tokenOut == usdl) {
+            // buyUSDL
             amountOut = IVault(vault).buyUSDL(_tokenIn, _receiver);
-        } else if (_tokenIn == usdl) { // sellUSDL
+        } else if (_tokenIn == usdl) {
+            // sellUSDL
             amountOut = IVault(vault).sellUSDL(_tokenOut, _receiver);
-        } else { // swap
+        } else {
+            // swap
             amountOut = IVault(vault).swap(_tokenIn, _tokenOut, _receiver);
         }
 

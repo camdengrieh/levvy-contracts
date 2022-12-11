@@ -21,7 +21,7 @@ contract ClaimSwapFactory is IClaimSwapFactory {
         btcBnbPair = _addresses[4];
     }
 
-    function getPair(address tokenA, address tokenB) external override view returns (address) {
+    function getPair(address tokenA, address tokenB) external view override returns (address) {
         if (tokenA == dai && tokenB == klay) {
             return klayBusdPair;
         }

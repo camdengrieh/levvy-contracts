@@ -20,9 +20,9 @@ contract TokenManager is ReentrancyGuard {
     address public admin;
 
     address[] public signers;
-    mapping (address => bool) public isSigner;
-    mapping (bytes32 => bool) public pendingActions;
-    mapping (address => mapping (bytes32 => bool)) public signedActions;
+    mapping(address => bool) public isSigner;
+    mapping(bytes32 => bool) public pendingActions;
+    mapping(address => mapping(bytes32 => bool)) public signedActions;
 
     event SignalApprove(address token, address spender, uint256 amount, bytes32 action, uint256 nonce);
     event SignalApproveNFT(address token, address spender, uint256 tokenId, bytes32 action, uint256 nonce);
@@ -134,14 +134,14 @@ contract TokenManager is ReentrancyGuard {
         _validateAction(action);
         _validateAuthorization(action);
 
-        for (uint256 i = 0 ; i < _tokenIds.length; i++) {
+        for (uint256 i = 0; i < _tokenIds.length; i++) {
             IERC721(_token).approve(_spender, _tokenIds[i]);
         }
         _clearAction(action, _nonce);
     }
 
     function receiveNFTs(address _token, address _sender, uint256[] memory _tokenIds) external nonReentrant onlyAdmin {
-        for (uint256 i = 0 ; i < _tokenIds.length; i++) {
+        for (uint256 i = 0; i < _tokenIds.length; i++) {
             IERC721(_token).transferFrom(_sender, address(this), _tokenIds[i]);
         }
     }

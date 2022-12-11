@@ -10,15 +10,14 @@ import "../peripherals/interfaces/ITimelock.sol";
 import "./BasePositionManager.sol";
 
 contract PositionManager is BasePositionManager {
-
     address public orderBook;
     bool public inLegacyMode;
 
     bool public shouldValidateIncreaseOrder = true;
 
-    mapping (address => bool) public isOrderKeeper;
-    mapping (address => bool) public isPartner;
-    mapping (address => bool) public isLiquidator;
+    mapping(address => bool) public isOrderKeeper;
+    mapping(address => bool) public isPartner;
+    mapping(address => bool) public isLiquidator;
 
     event SetOrderKeeper(address indexed account, bool isActive);
     event SetLiquidator(address indexed account, bool isActive);
@@ -153,7 +152,16 @@ contract PositionManager is BasePositionManager {
     ) external nonReentrant onlyPartnersOrLegacyMode {
         require(_collateralToken == wklay, "PositionManager: invalid _collateralToken");
 
-        uint256 amountOut = _decreasePosition(msg.sender, _collateralToken, _indexToken, _collateralDelta, _sizeDelta, _isLong, address(this), _price);
+        uint256 amountOut = _decreasePosition(
+            msg.sender,
+            _collateralToken,
+            _indexToken,
+            _collateralDelta,
+            _sizeDelta,
+            _isLong,
+            address(this),
+            _price
+        );
         _transferOutKLAYWithGasLimitIgnoreFail(amountOut, _receiver);
     }
 
@@ -224,16 +232,17 @@ contract PositionManager is BasePositionManager {
         address timelock = IVault(_vault).gov();
 
         (
-            /*address purchaseToken*/,
-            /*uint256 purchaseTokenAmount*/,
-            address collateralToken,
+            ,
+            ,
+            /*address purchaseToken*/ /*uint256 purchaseTokenAmount*/ address collateralToken,
             address indexToken,
             uint256 sizeDelta,
             bool isLong,
-            /*uint256 triggerPrice*/,
-            /*bool triggerAboveThreshold*/,
-            /*uint256 executionFee*/
-        ) = IOrderBook(orderBook).getIncreaseOrder(_account, _orderIndex);
+            ,
+            ,
+
+        ) = /*uint256 triggerPrice*/ /*bool triggerAboveThreshold*/ /*uint256 executionFee*/
+            IOrderBook(orderBook).getIncreaseOrder(_account, _orderIndex);
 
         uint256 markPrice = isLong ? IVault(_vault).getMaxPrice(indexToken) : IVault(_vault).getMinPrice(indexToken);
         // should be called strictly before position is updated in Vault
@@ -252,14 +261,15 @@ contract PositionManager is BasePositionManager {
 
         (
             address collateralToken,
-            /*uint256 collateralDelta*/,
-            address indexToken,
+            ,
+            /*uint256 collateralDelta*/ address indexToken,
             uint256 sizeDelta,
             bool isLong,
-            /*uint256 triggerPrice*/,
-            /*bool triggerAboveThreshold*/,
-            /*uint256 executionFee*/
-        ) = IOrderBook(orderBook).getDecreaseOrder(_account, _orderIndex);
+            ,
+            ,
+
+        ) = /*uint256 triggerPrice*/ /*bool triggerAboveThreshold*/ /*uint256 executionFee*/
+            IOrderBook(orderBook).getDecreaseOrder(_account, _orderIndex);
 
         uint256 markPrice = isLong ? IVault(_vault).getMinPrice(indexToken) : IVault(_vault).getMaxPrice(indexToken);
         // should be called strictly before position is updated in Vault
@@ -279,18 +289,23 @@ contract PositionManager is BasePositionManager {
             address _collateralToken,
             address _indexToken,
             uint256 _sizeDelta,
-            bool _isLong,
-            , // triggerPrice
-            , // triggerAboveThreshold
-            // executionFee
-        ) = IOrderBook(orderBook).getIncreaseOrder(_account, _orderIndex);
+            bool _isLong, // triggerPrice // triggerAboveThreshold
+            ,
+            ,
+
+        ) = // executionFee
+            IOrderBook(orderBook).getIncreaseOrder(_account, _orderIndex);
 
         _validateMaxGlobalSize(_indexToken, _isLong, _sizeDelta);
 
-        if (!shouldValidateIncreaseOrder) { return; }
+        if (!shouldValidateIncreaseOrder) {
+            return;
+        }
 
         // shorts are okay
-        if (!_isLong) { return; }
+        if (!_isLong) {
+            return;
+        }
 
         // if the position size is not increasing, this is a collateral deposit
         require(_sizeDelta > 0, "PositionManager: long deposit");
@@ -299,7 +314,9 @@ contract PositionManager is BasePositionManager {
         (uint256 size, uint256 collateral, , , , , , ) = _vault.getPosition(_account, _collateralToken, _indexToken, _isLong);
 
         // if there is no existing position, do not charge a fee
-        if (size == 0) { return; }
+        if (size == 0) {
+            return;
+        }
 
         uint256 nextSize = size.add(_sizeDelta);
         uint256 collateralDelta = _vault.tokenToUsdMin(_purchaseToken, _purchaseTokenAmount);

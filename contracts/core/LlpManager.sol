@@ -30,14 +30,14 @@ contract LevLpManager is ReentrancyGuard, Governable, ILevLpManager {
     address public levLp;
 
     uint256 public override cooldownDuration;
-    mapping (address => uint256) public override lastAddedAt;
+    mapping(address => uint256) public override lastAddedAt;
 
     uint256 public aumAddition;
     uint256 public aumDeduction;
 
     bool public inPrivateMode;
     uint256 public shortsTrackerAveragePriceWeight;
-    mapping (address => bool) public isHandler;
+    mapping(address => bool) public isHandler;
 
     event AddLiquidity(
         address account,
@@ -96,21 +96,43 @@ contract LevLpManager is ReentrancyGuard, Governable, ILevLpManager {
     }
 
     function addLiquidity(address _token, uint256 _amount, uint256 _minUsdl, uint256 _minLevLp) external override nonReentrant returns (uint256) {
-        if (inPrivateMode) { revert("LevLpManager: action not enabled"); }
+        if (inPrivateMode) {
+            revert("LevLpManager: action not enabled");
+        }
         return _addLiquidity(msg.sender, msg.sender, _token, _amount, _minUsdl, _minLevLp);
     }
 
-    function addLiquidityForAccount(address _fundingAccount, address _account, address _token, uint256 _amount, uint256 _minUsdl, uint256 _minLevLp) external override nonReentrant returns (uint256) {
+    function addLiquidityForAccount(
+        address _fundingAccount,
+        address _account,
+        address _token,
+        uint256 _amount,
+        uint256 _minUsdl,
+        uint256 _minLevLp
+    ) external override nonReentrant returns (uint256) {
         _validateHandler();
         return _addLiquidity(_fundingAccount, _account, _token, _amount, _minUsdl, _minLevLp);
     }
 
-    function removeLiquidity(address _tokenOut, uint256 _levLpAmount, uint256 _minOut, address _receiver) external override nonReentrant returns (uint256) {
-        if (inPrivateMode) { revert("LevLpManager: action not enabled"); }
+    function removeLiquidity(
+        address _tokenOut,
+        uint256 _levLpAmount,
+        uint256 _minOut,
+        address _receiver
+    ) external override nonReentrant returns (uint256) {
+        if (inPrivateMode) {
+            revert("LevLpManager: action not enabled");
+        }
         return _removeLiquidity(msg.sender, _tokenOut, _levLpAmount, _minOut, _receiver);
     }
 
-    function removeLiquidityForAccount(address _account, address _tokenOut, uint256 _levLpAmount, uint256 _minOut, address _receiver) external override nonReentrant returns (uint256) {
+    function removeLiquidityForAccount(
+        address _account,
+        address _tokenOut,
+        uint256 _levLpAmount,
+        uint256 _minOut,
+        address _receiver
+    ) external override nonReentrant returns (uint256) {
         _validateHandler();
         return _removeLiquidity(_account, _tokenOut, _levLpAmount, _minOut, _receiver);
     }
@@ -128,7 +150,7 @@ contract LevLpManager is ReentrancyGuard, Governable, ILevLpManager {
         return amounts;
     }
 
-    function getAumInUsdl(bool maximise) public override view returns (uint256) {
+    function getAumInUsdl(bool maximise) public view override returns (uint256) {
         uint256 aum = getAum(maximise);
         return aum.mul(10 ** USDL_DECIMALS).div(PRICE_PRECISION);
     }
@@ -201,12 +223,21 @@ contract LevLpManager is ReentrancyGuard, Governable, ILevLpManager {
         uint256 vaultAveragePrice = vault.globalShortAveragePrices(_token);
         uint256 shortsTrackerAveragePrice = _shortsTracker.globalShortAveragePrices(_token);
 
-        return vaultAveragePrice.mul(BASIS_POINTS_DIVISOR.sub(_shortsTrackerAveragePriceWeight))
-            .add(shortsTrackerAveragePrice.mul(_shortsTrackerAveragePriceWeight))
-            .div(BASIS_POINTS_DIVISOR);
+        return
+            vaultAveragePrice
+                .mul(BASIS_POINTS_DIVISOR.sub(_shortsTrackerAveragePriceWeight))
+                .add(shortsTrackerAveragePrice.mul(_shortsTrackerAveragePriceWeight))
+                .div(BASIS_POINTS_DIVISOR);
     }
 
-    function _addLiquidity(address _fundingAccount, address _account, address _token, uint256 _amount, uint256 _minUsdl, uint256 _minLevLp) private returns (uint256) {
+    function _addLiquidity(
+        address _fundingAccount,
+        address _account,
+        address _token,
+        uint256 _amount,
+        uint256 _minUsdl,
+        uint256 _minLevLp
+    ) private returns (uint256) {
         require(_amount > 0, "LevLpManager: invalid _amount");
 
         // calculate aum before buyUSDL
@@ -229,7 +260,13 @@ contract LevLpManager is ReentrancyGuard, Governable, ILevLpManager {
         return mintAmount;
     }
 
-    function _removeLiquidity(address _account, address _tokenOut, uint256 _levLpAmount, uint256 _minOut, address _receiver) private returns (uint256) {
+    function _removeLiquidity(
+        address _account,
+        address _tokenOut,
+        uint256 _levLpAmount,
+        uint256 _minOut,
+        address _receiver
+    ) private returns (uint256) {
         require(_levLpAmount > 0, "LevLpManager: invalid _levLpAmount");
         require(lastAddedAt[_account].add(cooldownDuration) <= block.timestamp, "LevLpManager: cooldown duration not yet passed");
 

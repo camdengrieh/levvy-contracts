@@ -37,10 +37,10 @@ contract LevvyTimelock is ILevvyTimelock {
     address public mintReceiver;
     uint256 public maxTokenSupply;
 
-    mapping (bytes32 => uint256) public pendingActions;
-    mapping (address => bool) public excludedTokens;
+    mapping(bytes32 => uint256) public pendingActions;
+    mapping(address => bool) public excludedTokens;
 
-    mapping (address => bool) public isHandler;
+    mapping(address => bool) public isHandler;
 
     event SignalPendingAction(bytes32 action);
     event SignalApprove(address token, address spender, uint256 amount, bytes32 action);
@@ -60,13 +60,7 @@ contract LevvyTimelock is ILevvyTimelock {
         bool isStable,
         bool isShortable
     );
-    event SignalPriceFeedSetTokenConfig(
-        address vaultPriceFeed,
-        address token,
-        address priceFeed,
-        uint256 priceDecimals,
-        bool isStrictStable
-    );
+    event SignalPriceFeedSetTokenConfig(address vaultPriceFeed, address token, address priceFeed, uint256 priceDecimals, bool isStrictStable);
     event ClearAction(bytes32 action);
 
     modifier onlyAdmin() {
@@ -129,11 +123,16 @@ contract LevvyTimelock is ILevvyTimelock {
     }
 
     function setMaxLeverage(address _vault, uint256 _maxLeverage) external onlyAdmin {
-      require(_maxLeverage > MAX_LEVERAGE_VALIDATION, "LevvyTimelock: invalid _maxLeverage");
-      IVault(_vault).setMaxLeverage(_maxLeverage);
+        require(_maxLeverage > MAX_LEVERAGE_VALIDATION, "LevvyTimelock: invalid _maxLeverage");
+        IVault(_vault).setMaxLeverage(_maxLeverage);
     }
 
-    function setFundingRate(address _vault, uint256 _fundingInterval, uint256 _fundingRateFactor, uint256 _stableFundingRateFactor) external onlyAdmin {
+    function setFundingRate(
+        address _vault,
+        uint256 _fundingInterval,
+        uint256 _fundingRateFactor,
+        uint256 _stableFundingRateFactor
+    ) external onlyAdmin {
         require(_fundingRateFactor < MAX_FUNDING_RATE_FACTOR, "LevvyTimelock: invalid _fundingRateFactor");
         require(_stableFundingRateFactor < MAX_FUNDING_RATE_FACTOR, "LevvyTimelock: invalid _stableFundingRateFactor");
         IVault(_vault).setFundingRate(_fundingInterval, _fundingRateFactor, _stableFundingRateFactor);
@@ -190,15 +189,7 @@ contract LevvyTimelock is ILevvyTimelock {
         bool isStable = vault.stableTokens(_token);
         bool isShortable = vault.shortableTokens(_token);
 
-        IVault(_vault).setTokenConfig(
-            _token,
-            tokenDecimals,
-            _tokenWeight,
-            _minProfitBps,
-            _maxUsdlAmount,
-            isStable,
-            isShortable
-        );
+        IVault(_vault).setTokenConfig(_token, tokenDecimals, _tokenWeight, _minProfitBps, _maxUsdlAmount, isStable, isShortable);
 
         IVault(_vault).setBufferAmount(_token, _bufferAmount);
 
@@ -245,7 +236,7 @@ contract LevvyTimelock is ILevvyTimelock {
         IVaultPriceFeed(_priceFeed).setFavorPrimaryPrice(_favorPrimaryPrice);
     }
 
-    function setPriceSampleSpace(address _priceFeed,uint256 _priceSampleSpace) external onlyAdmin {
+    function setPriceSampleSpace(address _priceFeed, uint256 _priceSampleSpace) external onlyAdmin {
         require(_priceSampleSpace <= 5, "Invalid _priceSampleSpace");
         IVaultPriceFeed(_priceFeed).setPriceSampleSpace(_priceSampleSpace);
     }
@@ -262,12 +253,12 @@ contract LevvyTimelock is ILevvyTimelock {
         IVault(_vault).setVaultUtils(_vaultUtils);
     }
 
-    function setMaxGasPrice(address _vault,uint256 _maxGasPrice) external onlyAdmin {
+    function setMaxGasPrice(address _vault, uint256 _maxGasPrice) external onlyAdmin {
         require(_maxGasPrice > 5000000000, "Invalid _maxGasPrice");
         IVault(_vault).setMaxGasPrice(_maxGasPrice);
     }
 
-    function withdrawFees(address _vault,address _token, address _receiver) external onlyAdmin {
+    function withdrawFees(address _vault, address _token, address _receiver) external onlyAdmin {
         IVault(_vault).withdrawFees(_token, _receiver);
     }
 
@@ -409,30 +400,23 @@ contract LevvyTimelock is ILevvyTimelock {
         bool _isStable,
         bool _isShortable
     ) external onlyAdmin {
-        bytes32 action = keccak256(abi.encodePacked(
-            "vaultSetTokenConfig",
-            _vault,
-            _token,
-            _tokenDecimals,
-            _tokenWeight,
-            _minProfitBps,
-            _maxUsdlAmount,
-            _isStable,
-            _isShortable
-        ));
+        bytes32 action = keccak256(
+            abi.encodePacked(
+                "vaultSetTokenConfig",
+                _vault,
+                _token,
+                _tokenDecimals,
+                _tokenWeight,
+                _minProfitBps,
+                _maxUsdlAmount,
+                _isStable,
+                _isShortable
+            )
+        );
 
         _setPendingAction(action);
 
-        emit SignalVaultSetTokenConfig(
-            _vault,
-            _token,
-            _tokenDecimals,
-            _tokenWeight,
-            _minProfitBps,
-            _maxUsdlAmount,
-            _isStable,
-            _isShortable
-        );
+        emit SignalVaultSetTokenConfig(_vault, _token, _tokenDecimals, _tokenWeight, _minProfitBps, _maxUsdlAmount, _isStable, _isShortable);
     }
 
     function vaultSetTokenConfig(
@@ -445,30 +429,24 @@ contract LevvyTimelock is ILevvyTimelock {
         bool _isStable,
         bool _isShortable
     ) external onlyAdmin {
-        bytes32 action = keccak256(abi.encodePacked(
-            "vaultSetTokenConfig",
-            _vault,
-            _token,
-            _tokenDecimals,
-            _tokenWeight,
-            _minProfitBps,
-            _maxUsdlAmount,
-            _isStable,
-            _isShortable
-        ));
+        bytes32 action = keccak256(
+            abi.encodePacked(
+                "vaultSetTokenConfig",
+                _vault,
+                _token,
+                _tokenDecimals,
+                _tokenWeight,
+                _minProfitBps,
+                _maxUsdlAmount,
+                _isStable,
+                _isShortable
+            )
+        );
 
         _validateAction(action);
         _clearAction(action);
 
-        IVault(_vault).setTokenConfig(
-            _token,
-            _tokenDecimals,
-            _tokenWeight,
-            _minProfitBps,
-            _maxUsdlAmount,
-            _isStable,
-            _isShortable
-        );
+        IVault(_vault).setTokenConfig(_token, _tokenDecimals, _tokenWeight, _minProfitBps, _maxUsdlAmount, _isStable, _isShortable);
     }
 
     function signalPriceFeedSetTokenConfig(
@@ -478,24 +456,11 @@ contract LevvyTimelock is ILevvyTimelock {
         uint256 _priceDecimals,
         bool _isStrictStable
     ) external onlyAdmin {
-        bytes32 action = keccak256(abi.encodePacked(
-            "priceFeedSetTokenConfig",
-            _vaultPriceFeed,
-            _token,
-            _priceFeed,
-            _priceDecimals,
-            _isStrictStable
-        ));
+        bytes32 action = keccak256(abi.encodePacked("priceFeedSetTokenConfig", _vaultPriceFeed, _token, _priceFeed, _priceDecimals, _isStrictStable));
 
         _setPendingAction(action);
 
-        emit SignalPriceFeedSetTokenConfig(
-            _vaultPriceFeed,
-            _token,
-            _priceFeed,
-            _priceDecimals,
-            _isStrictStable
-        );
+        emit SignalPriceFeedSetTokenConfig(_vaultPriceFeed, _token, _priceFeed, _priceDecimals, _isStrictStable);
     }
 
     function priceFeedSetTokenConfig(
@@ -505,24 +470,12 @@ contract LevvyTimelock is ILevvyTimelock {
         uint256 _priceDecimals,
         bool _isStrictStable
     ) external onlyAdmin {
-        bytes32 action = keccak256(abi.encodePacked(
-            "priceFeedSetTokenConfig",
-            _vaultPriceFeed,
-            _token,
-            _priceFeed,
-            _priceDecimals,
-            _isStrictStable
-        ));
+        bytes32 action = keccak256(abi.encodePacked("priceFeedSetTokenConfig", _vaultPriceFeed, _token, _priceFeed, _priceDecimals, _isStrictStable));
 
         _validateAction(action);
         _clearAction(action);
 
-        IVaultPriceFeed(_vaultPriceFeed).setTokenConfig(
-            _token,
-            _priceFeed,
-            _priceDecimals,
-            _isStrictStable
-        );
+        IVaultPriceFeed(_vaultPriceFeed).setTokenConfig(_token, _priceFeed, _priceDecimals, _isStrictStable);
     }
 
     function cancelAction(bytes32 _action) external onlyAdmin {

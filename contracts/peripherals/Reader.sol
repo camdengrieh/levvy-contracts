@@ -98,7 +98,12 @@ contract Reader is Governable {
         return (amountOutAfterFees, feeAmount);
     }
 
-    function getFeeBasisPoints(IVault _vault, address _tokenIn, address _tokenOut, uint256 _amountIn) public view returns (uint256, uint256, uint256) {
+    function getFeeBasisPoints(
+        IVault _vault,
+        address _tokenIn,
+        address _tokenOut,
+        uint256 _amountIn
+    ) public view returns (uint256, uint256, uint256) {
         uint256 priceIn = _vault.getMinPrice(_tokenIn);
         uint256 tokenInDecimals = _vault.tokenDecimals(_tokenIn);
 
@@ -163,7 +168,7 @@ contract Reader is Governable {
     function getPairInfo(address _factory, address[] memory _tokens) public view returns (uint256[] memory) {
         uint256 inputLength = 2;
         uint256 propsLength = 2;
-        uint256[] memory amounts = new uint256[](_tokens.length / inputLength * propsLength);
+        uint256[] memory amounts = new uint256[]((_tokens.length / inputLength) * propsLength);
         for (uint256 i = 0; i < _tokens.length / inputLength; i++) {
             address token0 = _tokens[i * inputLength];
             address token1 = _tokens[i * inputLength + 1];
@@ -298,7 +303,12 @@ contract Reader is Governable {
         return amounts;
     }
 
-    function getFullVaultTokenInfo(address _vault, address _wklay, uint256 _usdlAmount, address[] memory _tokens) public view returns (uint256[] memory) {
+    function getFullVaultTokenInfo(
+        address _vault,
+        address _wklay,
+        uint256 _usdlAmount,
+        address[] memory _tokens
+    ) public view returns (uint256[] memory) {
         uint256 propsLength = 12;
 
         IVault vault = IVault(_vault);
@@ -327,7 +337,12 @@ contract Reader is Governable {
         return amounts;
     }
 
-    function getVaultTokenInfoV2(address _vault, address _wklay, uint256 _usdlAmount, address[] memory _tokens) public view returns (uint256[] memory) {
+    function getVaultTokenInfoV2(
+        address _vault,
+        address _wklay,
+        uint256 _usdlAmount,
+        address[] memory _tokens
+    ) public view returns (uint256[] memory) {
         uint256 propsLength = 14;
 
         IVault vault = IVault(_vault);
@@ -360,27 +375,35 @@ contract Reader is Governable {
         return amounts;
     }
 
-    function getPositions(address _vault, address _account, address[] memory _collateralTokens, address[] memory _indexTokens, bool[] memory _isLong) public view returns(uint256[] memory) {
+    function getPositions(
+        address _vault,
+        address _account,
+        address[] memory _collateralTokens,
+        address[] memory _indexTokens,
+        bool[] memory _isLong
+    ) public view returns (uint256[] memory) {
         uint256[] memory amounts = new uint256[](_collateralTokens.length * POSITION_PROPS_LENGTH);
 
         for (uint256 i = 0; i < _collateralTokens.length; i++) {
             {
-            (uint256 size,
-             uint256 collateral,
-             uint256 averagePrice,
-             uint256 entryFundingRate,
-             /* reserveAmount */,
-             uint256 realisedPnl,
-             bool hasRealisedProfit,
-             uint256 lastIncreasedTime) = IVault(_vault).getPosition(_account, _collateralTokens[i], _indexTokens[i], _isLong[i]);
+                (
+                    uint256 size,
+                    uint256 collateral,
+                    uint256 averagePrice,
+                    uint256 entryFundingRate,
+                    ,
+                    /* reserveAmount */ uint256 realisedPnl,
+                    bool hasRealisedProfit,
+                    uint256 lastIncreasedTime
+                ) = IVault(_vault).getPosition(_account, _collateralTokens[i], _indexTokens[i], _isLong[i]);
 
-            amounts[i * POSITION_PROPS_LENGTH] = size;
-            amounts[i * POSITION_PROPS_LENGTH + 1] = collateral;
-            amounts[i * POSITION_PROPS_LENGTH + 2] = averagePrice;
-            amounts[i * POSITION_PROPS_LENGTH + 3] = entryFundingRate;
-            amounts[i * POSITION_PROPS_LENGTH + 4] = hasRealisedProfit ? 1 : 0;
-            amounts[i * POSITION_PROPS_LENGTH + 5] = realisedPnl;
-            amounts[i * POSITION_PROPS_LENGTH + 6] = lastIncreasedTime;
+                amounts[i * POSITION_PROPS_LENGTH] = size;
+                amounts[i * POSITION_PROPS_LENGTH + 1] = collateral;
+                amounts[i * POSITION_PROPS_LENGTH + 2] = averagePrice;
+                amounts[i * POSITION_PROPS_LENGTH + 3] = entryFundingRate;
+                amounts[i * POSITION_PROPS_LENGTH + 4] = hasRealisedProfit ? 1 : 0;
+                amounts[i * POSITION_PROPS_LENGTH + 5] = realisedPnl;
+                amounts[i * POSITION_PROPS_LENGTH + 6] = lastIncreasedTime;
             }
 
             uint256 size = amounts[i * POSITION_PROPS_LENGTH];

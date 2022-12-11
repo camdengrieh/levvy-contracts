@@ -33,25 +33,25 @@ contract Vester is IVester, IERC20, ReentrancyGuard, Governable {
 
     bool public hasMaxVestableAmount;
 
-    mapping (address => uint256) public balances;
-    mapping (address => uint256) public override pairAmounts;
-    mapping (address => uint256) public override cumulativeClaimAmounts;
-    mapping (address => uint256) public override claimedAmounts;
-    mapping (address => uint256) public lastVestingTimes;
+    mapping(address => uint256) public balances;
+    mapping(address => uint256) public override pairAmounts;
+    mapping(address => uint256) public override cumulativeClaimAmounts;
+    mapping(address => uint256) public override claimedAmounts;
+    mapping(address => uint256) public lastVestingTimes;
 
-    mapping (address => uint256) public override transferredAverageStakedAmounts;
-    mapping (address => uint256) public override transferredCumulativeRewards;
-    mapping (address => uint256) public override cumulativeRewardDeductions;
-    mapping (address => uint256) public override bonusRewards;
+    mapping(address => uint256) public override transferredAverageStakedAmounts;
+    mapping(address => uint256) public override transferredCumulativeRewards;
+    mapping(address => uint256) public override cumulativeRewardDeductions;
+    mapping(address => uint256) public override bonusRewards;
 
-    mapping (address => bool) public isHandler;
+    mapping(address => bool) public isHandler;
 
     event Claim(address receiver, uint256 amount);
     event Deposit(address account, uint256 amount);
     event Withdraw(address account, uint256 claimedAmount, uint256 balance);
     event PairTransfer(address indexed from, address indexed to, uint256 value);
 
-    constructor (
+    constructor(
         string memory _name,
         string memory _symbol,
         uint256 _vestingDuration,
@@ -170,14 +170,16 @@ contract Vester is IVester, IERC20, ReentrancyGuard, Governable {
         bonusRewards[_account] = _amount;
     }
 
-    function claimable(address _account) public override view returns (uint256) {
+    function claimable(address _account) public view override returns (uint256) {
         uint256 amount = cumulativeClaimAmounts[_account].sub(claimedAmounts[_account]);
         uint256 nextClaimable = _getNextClaimableAmount(_account);
         return amount.add(nextClaimable);
     }
 
-    function getMaxVestableAmount(address _account) public override view returns (uint256) {
-        if (!hasRewardTracker()) { return 0; }
+    function getMaxVestableAmount(address _account) public view override returns (uint256) {
+        if (!hasRewardTracker()) {
+            return 0;
+        }
 
         uint256 transferredCumulativeReward = transferredCumulativeRewards[_account];
         uint256 bonusReward = bonusRewards[_account];
@@ -193,25 +195,27 @@ contract Vester is IVester, IERC20, ReentrancyGuard, Governable {
         return maxVestableAmount.sub(cumulativeRewardDeduction);
     }
 
-    function getCombinedAverageStakedAmount(address _account) public override view returns (uint256) {
+    function getCombinedAverageStakedAmount(address _account) public view override returns (uint256) {
         uint256 cumulativeReward = IRewardTracker(rewardTracker).cumulativeRewards(_account);
         uint256 transferredCumulativeReward = transferredCumulativeRewards[_account];
         uint256 totalCumulativeReward = cumulativeReward.add(transferredCumulativeReward);
-        if (totalCumulativeReward == 0) { return 0; }
+        if (totalCumulativeReward == 0) {
+            return 0;
+        }
 
         uint256 averageStakedAmount = IRewardTracker(rewardTracker).averageStakedAmounts(_account);
         uint256 transferredAverageStakedAmount = transferredAverageStakedAmounts[_account];
 
-        return averageStakedAmount
-            .mul(cumulativeReward)
-            .div(totalCumulativeReward)
-            .add(
+        return
+            averageStakedAmount.mul(cumulativeReward).div(totalCumulativeReward).add(
                 transferredAverageStakedAmount.mul(transferredCumulativeReward).div(totalCumulativeReward)
             );
     }
 
     function getPairAmount(address _account, uint256 _esAmount) public view returns (uint256) {
-        if (!hasRewardTracker()) { return 0; }
+        if (!hasRewardTracker()) {
+            return 0;
+        }
 
         uint256 combinedAverageStakedAmount = getCombinedAverageStakedAmount(_account);
         if (combinedAverageStakedAmount == 0) {
@@ -262,7 +266,7 @@ contract Vester is IVester, IERC20, ReentrancyGuard, Governable {
         revert("Vester: non-transferrable");
     }
 
-    function getVestedAmount(address _account) public override view returns (uint256) {
+    function getVestedAmount(address _account) public view override returns (uint256) {
         uint256 balance = balances[_account];
         uint256 cumulativeClaimAmount = cumulativeClaimAmounts[_account];
         return balance.add(cumulativeClaimAmount);
@@ -350,7 +354,9 @@ contract Vester is IVester, IERC20, ReentrancyGuard, Governable {
         uint256 timeDiff = block.timestamp.sub(lastVestingTimes[_account]);
 
         uint256 balance = balances[_account];
-        if (balance == 0) { return 0; }
+        if (balance == 0) {
+            return 0;
+        }
 
         uint256 vestedAmount = getVestedAmount(_account);
         uint256 claimableAmount = vestedAmount.mul(timeDiff).div(vestingDuration);

@@ -68,12 +68,16 @@ contract RewardDistributor is IRewardDistributor, ReentrancyGuard, Governable {
     function distribute() external override returns (uint256) {
         require(msg.sender == rewardTracker, "RewardDistributor: invalid msg.sender");
         uint256 amount = pendingRewards();
-        if (amount == 0) { return 0; }
+        if (amount == 0) {
+            return 0;
+        }
 
         lastDistributionTime = block.timestamp;
 
         uint256 balance = IERC20(rewardToken).balanceOf(address(this));
-        if (amount > balance) { amount = balance; }
+        if (amount > balance) {
+            amount = balance;
+        }
 
         IERC20(rewardToken).safeTransfer(msg.sender, amount);
 

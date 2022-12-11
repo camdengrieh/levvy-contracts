@@ -24,12 +24,7 @@ contract EsLevvyBatchSender {
         _;
     }
 
-    function send(
-        IVester _vester,
-        uint256 _minRatio,
-        address[] memory _accounts,
-        uint256[] memory _amounts
-    ) external onlyAdmin {
+    function send(IVester _vester, uint256 _minRatio, address[] memory _accounts, uint256[] memory _amounts) external onlyAdmin {
         IRewardTracker rewardTracker = IRewardTracker(_vester.rewardTracker());
 
         for (uint256 i = 0; i < _accounts.length; i++) {

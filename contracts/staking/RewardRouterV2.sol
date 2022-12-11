@@ -42,7 +42,7 @@ contract RewardRouterV2 is ReentrancyGuard, Governable {
     address public levvyVester;
     address public levLpVester;
 
-    mapping (address => address) public pendingReceivers;
+    mapping(address => address) public pendingReceivers;
 
     event StakeLevvy(address account, address token, uint256 amount);
     event UnstakeLevvy(address account, address token, uint256 amount);
@@ -155,7 +155,12 @@ contract RewardRouterV2 is ReentrancyGuard, Governable {
         return levLpAmount;
     }
 
-    function unstakeAndRedeemLevLp(address _tokenOut, uint256 _levLpAmount, uint256 _minOut, address _receiver) external nonReentrant returns (uint256) {
+    function unstakeAndRedeemLevLp(
+        address _tokenOut,
+        uint256 _levLpAmount,
+        uint256 _minOut,
+        address _receiver
+    ) external nonReentrant returns (uint256) {
         require(_levLpAmount > 0, "RewardRouter: invalid _levLpAmount");
 
         address account = msg.sender;
@@ -344,7 +349,10 @@ contract RewardRouterV2 is ReentrancyGuard, Governable {
         require(IRewardTracker(feeLevvyTracker).averageStakedAmounts(_receiver) == 0, "RewardRouter: feeLevvyTracker.averageStakedAmounts > 0");
         require(IRewardTracker(feeLevvyTracker).cumulativeRewards(_receiver) == 0, "RewardRouter: feeLevvyTracker.cumulativeRewards > 0");
 
-        require(IVester(levvyVester).transferredAverageStakedAmounts(_receiver) == 0, "RewardRouter: levvyVester.transferredAverageStakedAmounts > 0");
+        require(
+            IVester(levvyVester).transferredAverageStakedAmounts(_receiver) == 0,
+            "RewardRouter: levvyVester.transferredAverageStakedAmounts > 0"
+        );
         require(IVester(levvyVester).transferredCumulativeRewards(_receiver) == 0, "RewardRouter: levvyVester.transferredCumulativeRewards > 0");
 
         require(IRewardTracker(stakedLevLpTracker).averageStakedAmounts(_receiver) == 0, "RewardRouter: stakedLevLpTracker.averageStakedAmounts > 0");
@@ -353,7 +361,10 @@ contract RewardRouterV2 is ReentrancyGuard, Governable {
         require(IRewardTracker(feeLevLpTracker).averageStakedAmounts(_receiver) == 0, "RewardRouter: feeLevLpTracker.averageStakedAmounts > 0");
         require(IRewardTracker(feeLevLpTracker).cumulativeRewards(_receiver) == 0, "RewardRouter: feeLevLpTracker.cumulativeRewards > 0");
 
-        require(IVester(levLpVester).transferredAverageStakedAmounts(_receiver) == 0, "RewardRouter: levvyVester.transferredAverageStakedAmounts > 0");
+        require(
+            IVester(levLpVester).transferredAverageStakedAmounts(_receiver) == 0,
+            "RewardRouter: levvyVester.transferredAverageStakedAmounts > 0"
+        );
         require(IVester(levLpVester).transferredCumulativeRewards(_receiver) == 0, "RewardRouter: levvyVester.transferredCumulativeRewards > 0");
 
         require(IERC20(levvyVester).balanceOf(_receiver) == 0, "RewardRouter: levvyVester.balance > 0");

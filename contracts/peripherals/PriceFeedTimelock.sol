@@ -27,23 +27,17 @@ contract PriceFeedTimelock {
 
     address public tokenManager;
 
-    mapping (bytes32 => uint256) public pendingActions;
+    mapping(bytes32 => uint256) public pendingActions;
 
-    mapping (address => bool) public isHandler;
-    mapping (address => bool) public isKeeper;
+    mapping(address => bool) public isHandler;
+    mapping(address => bool) public isKeeper;
 
     event SignalPendingAction(bytes32 action);
     event SignalApprove(address token, address spender, uint256 amount, bytes32 action);
     event SignalWithdrawToken(address target, address token, address receiver, uint256 amount, bytes32 action);
     event SignalSetGov(address target, address gov, bytes32 action);
     event SignalSetPriceFeedWatcher(address fastPriceFeed, address account, bool isActive);
-    event SignalPriceFeedSetTokenConfig(
-        address vaultPriceFeed,
-        address token,
-        address priceFeed,
-        uint256 priceDecimals,
-        bool isStrictStable
-    );
+    event SignalPriceFeedSetTokenConfig(address vaultPriceFeed, address token, address priceFeed, uint256 priceDecimals, bool isStrictStable);
     event ClearAction(bytes32 action);
 
     modifier onlyAdmin() {
@@ -66,11 +60,7 @@ contract PriceFeedTimelock {
         _;
     }
 
-    constructor(
-        address _admin,
-        uint256 _buffer,
-        address _tokenManager
-    ) public {
+    constructor(address _admin, uint256 _buffer, address _tokenManager) public {
         require(_buffer <= MAX_BUFFER, "Timelock: invalid _buffer");
         admin = _admin;
         buffer = _buffer;
@@ -124,7 +114,7 @@ contract PriceFeedTimelock {
         IVaultPriceFeed(_priceFeed).setSpreadBasisPoints(_token, _spreadBasisPoints);
     }
 
-    function setPriceSampleSpace(address _priceFeed,uint256 _priceSampleSpace) external onlyHandlerAndAbove {
+    function setPriceSampleSpace(address _priceFeed, uint256 _priceSampleSpace) external onlyHandlerAndAbove {
         require(_priceSampleSpace <= 5, "Invalid _priceSampleSpace");
         IVaultPriceFeed(_priceFeed).setPriceSampleSpace(_priceSampleSpace);
     }
@@ -233,24 +223,11 @@ contract PriceFeedTimelock {
         uint256 _priceDecimals,
         bool _isStrictStable
     ) external onlyAdmin {
-        bytes32 action = keccak256(abi.encodePacked(
-            "priceFeedSetTokenConfig",
-            _vaultPriceFeed,
-            _token,
-            _priceFeed,
-            _priceDecimals,
-            _isStrictStable
-        ));
+        bytes32 action = keccak256(abi.encodePacked("priceFeedSetTokenConfig", _vaultPriceFeed, _token, _priceFeed, _priceDecimals, _isStrictStable));
 
         _setPendingAction(action);
 
-        emit SignalPriceFeedSetTokenConfig(
-            _vaultPriceFeed,
-            _token,
-            _priceFeed,
-            _priceDecimals,
-            _isStrictStable
-        );
+        emit SignalPriceFeedSetTokenConfig(_vaultPriceFeed, _token, _priceFeed, _priceDecimals, _isStrictStable);
     }
 
     function priceFeedSetTokenConfig(
@@ -260,24 +237,12 @@ contract PriceFeedTimelock {
         uint256 _priceDecimals,
         bool _isStrictStable
     ) external onlyAdmin {
-        bytes32 action = keccak256(abi.encodePacked(
-            "priceFeedSetTokenConfig",
-            _vaultPriceFeed,
-            _token,
-            _priceFeed,
-            _priceDecimals,
-            _isStrictStable
-        ));
+        bytes32 action = keccak256(abi.encodePacked("priceFeedSetTokenConfig", _vaultPriceFeed, _token, _priceFeed, _priceDecimals, _isStrictStable));
 
         _validateAction(action);
         _clearAction(action);
 
-        IVaultPriceFeed(_vaultPriceFeed).setTokenConfig(
-            _token,
-            _priceFeed,
-            _priceDecimals,
-            _isStrictStable
-        );
+        IVaultPriceFeed(_vaultPriceFeed).setTokenConfig(_token, _priceFeed, _priceDecimals, _isStrictStable);
     }
 
     function cancelAction(bytes32 _action) external onlyAdmin {

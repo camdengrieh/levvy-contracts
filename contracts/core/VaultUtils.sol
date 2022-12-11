@@ -35,11 +35,25 @@ contract VaultUtils is IVaultUtils, Governable {
         return true;
     }
 
-    function validateIncreasePosition(address /* _account */, address /* _collateralToken */, address /* _indexToken */, uint256 /* _sizeDelta */, bool /* _isLong */) external override view {
+    function validateIncreasePosition(
+        address /* _account */,
+        address /* _collateralToken */,
+        address /* _indexToken */,
+        uint256 /* _sizeDelta */,
+        bool /* _isLong */
+    ) external view override {
         // no additional validations
     }
 
-    function validateDecreasePosition(address /* _account */, address /* _collateralToken */, address /* _indexToken */ , uint256 /* _collateralDelta */, uint256 /* _sizeDelta */, bool /* _isLong */, address /* _receiver */) external override view {
+    function validateDecreasePosition(
+        address /* _account */,
+        address /* _collateralToken */,
+        address /* _indexToken */,
+        uint256 /* _collateralDelta */,
+        uint256 /* _sizeDelta */,
+        bool /* _isLong */,
+        address /* _receiver */
+    ) external view override {
         // no additional validations
     }
 
@@ -47,7 +61,16 @@ contract VaultUtils is IVaultUtils, Governable {
         IVault _vault = vault;
         Position memory position;
         {
-            (uint256 size, uint256 collateral, uint256 averagePrice, uint256 entryFundingRate, /* reserveAmount */, /* realisedPnl */, /* hasProfit */, uint256 lastIncreasedTime) = _vault.getPosition(_account, _collateralToken, _indexToken, _isLong);
+            (
+                uint256 size,
+                uint256 collateral,
+                uint256 averagePrice,
+                uint256 entryFundingRate /* reserveAmount */ /* realisedPnl */ /* hasProfit */,
+                ,
+                ,
+                ,
+                uint256 lastIncreasedTime
+            ) = _vault.getPosition(_account, _collateralToken, _indexToken, _isLong);
             position.size = size;
             position.collateral = collateral;
             position.averagePrice = averagePrice;
@@ -57,7 +80,13 @@ contract VaultUtils is IVaultUtils, Governable {
         return position;
     }
 
-    function validateLiquidation(address _account, address _collateralToken, address _indexToken, bool _isLong, bool _raise) public view override returns (uint256, uint256) {
+    function validateLiquidation(
+        address _account,
+        address _collateralToken,
+        address _indexToken,
+        bool _isLong,
+        bool _raise
+    ) public view override returns (uint256, uint256) {
         Position memory position = getPosition(_account, _collateralToken, _indexToken, _isLong);
         IVault _vault = vault;
 
@@ -66,7 +95,9 @@ contract VaultUtils is IVaultUtils, Governable {
         marginFees = marginFees.add(getPositionFee(_account, _collateralToken, _indexToken, _isLong, position.size));
 
         if (!hasProfit && position.collateral < delta) {
-            if (_raise) { revert("Vault: losses exceed collateral"); }
+            if (_raise) {
+                revert("Vault: losses exceed collateral");
+            }
             return (1, marginFees);
         }
 
@@ -76,52 +107,77 @@ contract VaultUtils is IVaultUtils, Governable {
         }
 
         if (remainingCollateral < marginFees) {
-            if (_raise) { revert("Vault: fees exceed collateral"); }
+            if (_raise) {
+                revert("Vault: fees exceed collateral");
+            }
             // cap the fees to the remainingCollateral
             return (1, remainingCollateral);
         }
 
         if (remainingCollateral < marginFees.add(_vault.liquidationFeeUsd())) {
-            if (_raise) { revert("Vault: liquidation fees exceed collateral"); }
+            if (_raise) {
+                revert("Vault: liquidation fees exceed collateral");
+            }
             return (1, marginFees);
         }
 
         if (remainingCollateral.mul(_vault.maxLeverage()) < position.size.mul(BASIS_POINTS_DIVISOR)) {
-            if (_raise) { revert("Vault: maxLeverage exceeded"); }
+            if (_raise) {
+                revert("Vault: maxLeverage exceeded");
+            }
             return (2, marginFees);
         }
 
         return (0, marginFees);
     }
 
-    function getEntryFundingRate(address _collateralToken, address /* _indexToken */, bool /* _isLong */) public override view returns (uint256) {
+    function getEntryFundingRate(address _collateralToken, address /* _indexToken */, bool /* _isLong */) public view override returns (uint256) {
         return vault.cumulativeFundingRates(_collateralToken);
     }
 
-    function getPositionFee(address /* _account */, address /* _collateralToken */, address /* _indexToken */, bool /* _isLong */, uint256 _sizeDelta) public override view returns (uint256) {
-        if (_sizeDelta == 0) { return 0; }
+    function getPositionFee(
+        address /* _account */,
+        address /* _collateralToken */,
+        address /* _indexToken */,
+        bool /* _isLong */,
+        uint256 _sizeDelta
+    ) public view override returns (uint256) {
+        if (_sizeDelta == 0) {
+            return 0;
+        }
         uint256 afterFeeUsd = _sizeDelta.mul(BASIS_POINTS_DIVISOR.sub(vault.marginFeeBasisPoints())).div(BASIS_POINTS_DIVISOR);
         return _sizeDelta.sub(afterFeeUsd);
     }
 
-    function getFundingFee(address /* _account */, address _collateralToken, address /* _indexToken */, bool /* _isLong */, uint256 _size, uint256 _entryFundingRate) public override view returns (uint256) {
-        if (_size == 0) { return 0; }
+    function getFundingFee(
+        address /* _account */,
+        address _collateralToken,
+        address /* _indexToken */,
+        bool /* _isLong */,
+        uint256 _size,
+        uint256 _entryFundingRate
+    ) public view override returns (uint256) {
+        if (_size == 0) {
+            return 0;
+        }
 
         uint256 fundingRate = vault.cumulativeFundingRates(_collateralToken).sub(_entryFundingRate);
-        if (fundingRate == 0) { return 0; }
+        if (fundingRate == 0) {
+            return 0;
+        }
 
         return _size.mul(fundingRate).div(FUNDING_RATE_PRECISION);
     }
 
-    function getBuyUsdlFeeBasisPoints(address _token, uint256 _usdlAmount) public override view returns (uint256) {
+    function getBuyUsdlFeeBasisPoints(address _token, uint256 _usdlAmount) public view override returns (uint256) {
         return getFeeBasisPoints(_token, _usdlAmount, vault.mintBurnFeeBasisPoints(), vault.taxBasisPoints(), true);
     }
 
-    function getSellUsdlFeeBasisPoints(address _token, uint256 _usdlAmount) public override view returns (uint256) {
+    function getSellUsdlFeeBasisPoints(address _token, uint256 _usdlAmount) public view override returns (uint256) {
         return getFeeBasisPoints(_token, _usdlAmount, vault.mintBurnFeeBasisPoints(), vault.taxBasisPoints(), false);
     }
 
-    function getSwapFeeBasisPoints(address _tokenIn, address _tokenOut, uint256 _usdlAmount) public override view returns (uint256) {
+    function getSwapFeeBasisPoints(address _tokenIn, address _tokenOut, uint256 _usdlAmount) public view override returns (uint256) {
         bool isStableSwap = vault.stableTokens(_tokenIn) && vault.stableTokens(_tokenOut);
         uint256 baseBps = isStableSwap ? vault.stableSwapFeeBasisPoints() : vault.swapFeeBasisPoints();
         uint256 taxBps = isStableSwap ? vault.stableTaxBasisPoints() : vault.taxBasisPoints();
@@ -140,8 +196,16 @@ contract VaultUtils is IVaultUtils, Governable {
     // 6. initialAmount is close to targetAmount, action reduces balance largely => low tax
     // 7. initialAmount is above targetAmount, nextAmount is below targetAmount and vice versa
     // 8. a large swap should have similar fees as the same trade split into multiple smaller swaps
-    function getFeeBasisPoints(address _token, uint256 _usdlDelta, uint256 _feeBasisPoints, uint256 _taxBasisPoints, bool _increment) public override view returns (uint256) {
-        if (!vault.hasDynamicFees()) { return _feeBasisPoints; }
+    function getFeeBasisPoints(
+        address _token,
+        uint256 _usdlDelta,
+        uint256 _feeBasisPoints,
+        uint256 _taxBasisPoints,
+        bool _increment
+    ) public view override returns (uint256) {
+        if (!vault.hasDynamicFees()) {
+            return _feeBasisPoints;
+        }
 
         uint256 initialAmount = vault.usdlAmounts(_token);
         uint256 nextAmount = initialAmount.add(_usdlDelta);
@@ -150,7 +214,9 @@ contract VaultUtils is IVaultUtils, Governable {
         }
 
         uint256 targetAmount = vault.getTargetUsdlAmount(_token);
-        if (targetAmount == 0) { return _feeBasisPoints; }
+        if (targetAmount == 0) {
+            return _feeBasisPoints;
+        }
 
         uint256 initialDiff = initialAmount > targetAmount ? initialAmount.sub(targetAmount) : targetAmount.sub(initialAmount);
         uint256 nextDiff = nextAmount > targetAmount ? nextAmount.sub(targetAmount) : targetAmount.sub(nextAmount);

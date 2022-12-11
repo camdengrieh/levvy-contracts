@@ -39,10 +39,10 @@ contract Timelock is ITimelock {
     uint256 public maxMarginFeeBasisPoints;
     bool public shouldToggleIsLeverageEnabled;
 
-    mapping (bytes32 => uint256) public pendingActions;
+    mapping(bytes32 => uint256) public pendingActions;
 
-    mapping (address => bool) public isHandler;
-    mapping (address => bool) public isKeeper;
+    mapping(address => bool) public isHandler;
+    mapping(address => bool) public isKeeper;
 
     event SignalPendingAction(bytes32 action);
     event SignalApprove(address token, address spender, uint256 amount, bytes32 action);
@@ -130,11 +130,16 @@ contract Timelock is ITimelock {
     }
 
     function setMaxLeverage(address _vault, uint256 _maxLeverage) external onlyAdmin {
-      require(_maxLeverage > MAX_LEVERAGE_VALIDATION, "Timelock: invalid _maxLeverage");
-      IVault(_vault).setMaxLeverage(_maxLeverage);
+        require(_maxLeverage > MAX_LEVERAGE_VALIDATION, "Timelock: invalid _maxLeverage");
+        IVault(_vault).setMaxLeverage(_maxLeverage);
     }
 
-    function setFundingRate(address _vault, uint256 _fundingInterval, uint256 _fundingRateFactor, uint256 _stableFundingRateFactor) external onlyKeeperAndAbove {
+    function setFundingRate(
+        address _vault,
+        uint256 _fundingInterval,
+        uint256 _fundingRateFactor,
+        uint256 _stableFundingRateFactor
+    ) external onlyKeeperAndAbove {
         require(_fundingRateFactor < MAX_FUNDING_RATE_FACTOR, "Timelock: invalid _fundingRateFactor");
         require(_stableFundingRateFactor < MAX_FUNDING_RATE_FACTOR, "Timelock: invalid _stableFundingRateFactor");
         IVault(_vault).setFundingRate(_fundingInterval, _fundingRateFactor, _stableFundingRateFactor);
@@ -264,15 +269,7 @@ contract Timelock is ITimelock {
         bool isStable = vault.stableTokens(_token);
         bool isShortable = vault.shortableTokens(_token);
 
-        IVault(_vault).setTokenConfig(
-            _token,
-            tokenDecimals,
-            _tokenWeight,
-            _minProfitBps,
-            _maxUsdlAmount,
-            isStable,
-            isShortable
-        );
+        IVault(_vault).setTokenConfig(_token, tokenDecimals, _tokenWeight, _minProfitBps, _maxUsdlAmount, isStable, isShortable);
 
         IVault(_vault).setBufferAmount(_token, _bufferAmount);
 
@@ -496,30 +493,23 @@ contract Timelock is ITimelock {
         bool _isStable,
         bool _isShortable
     ) external onlyAdmin {
-        bytes32 action = keccak256(abi.encodePacked(
-            "vaultSetTokenConfig",
-            _vault,
-            _token,
-            _tokenDecimals,
-            _tokenWeight,
-            _minProfitBps,
-            _maxUsdlAmount,
-            _isStable,
-            _isShortable
-        ));
+        bytes32 action = keccak256(
+            abi.encodePacked(
+                "vaultSetTokenConfig",
+                _vault,
+                _token,
+                _tokenDecimals,
+                _tokenWeight,
+                _minProfitBps,
+                _maxUsdlAmount,
+                _isStable,
+                _isShortable
+            )
+        );
 
         _setPendingAction(action);
 
-        emit SignalVaultSetTokenConfig(
-            _vault,
-            _token,
-            _tokenDecimals,
-            _tokenWeight,
-            _minProfitBps,
-            _maxUsdlAmount,
-            _isStable,
-            _isShortable
-        );
+        emit SignalVaultSetTokenConfig(_vault, _token, _tokenDecimals, _tokenWeight, _minProfitBps, _maxUsdlAmount, _isStable, _isShortable);
     }
 
     function vaultSetTokenConfig(
@@ -532,30 +522,24 @@ contract Timelock is ITimelock {
         bool _isStable,
         bool _isShortable
     ) external onlyAdmin {
-        bytes32 action = keccak256(abi.encodePacked(
-            "vaultSetTokenConfig",
-            _vault,
-            _token,
-            _tokenDecimals,
-            _tokenWeight,
-            _minProfitBps,
-            _maxUsdlAmount,
-            _isStable,
-            _isShortable
-        ));
+        bytes32 action = keccak256(
+            abi.encodePacked(
+                "vaultSetTokenConfig",
+                _vault,
+                _token,
+                _tokenDecimals,
+                _tokenWeight,
+                _minProfitBps,
+                _maxUsdlAmount,
+                _isStable,
+                _isShortable
+            )
+        );
 
         _validateAction(action);
         _clearAction(action);
 
-        IVault(_vault).setTokenConfig(
-            _token,
-            _tokenDecimals,
-            _tokenWeight,
-            _minProfitBps,
-            _maxUsdlAmount,
-            _isStable,
-            _isShortable
-        );
+        IVault(_vault).setTokenConfig(_token, _tokenDecimals, _tokenWeight, _minProfitBps, _maxUsdlAmount, _isStable, _isShortable);
     }
 
     function cancelAction(bytes32 _action) external onlyAdmin {

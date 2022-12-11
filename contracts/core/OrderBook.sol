@@ -55,12 +55,12 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         uint256 executionFee;
     }
 
-    mapping (address => mapping(uint256 => IncreaseOrder)) public increaseOrders;
-    mapping (address => uint256) public increaseOrdersIndex;
-    mapping (address => mapping(uint256 => DecreaseOrder)) public decreaseOrders;
-    mapping (address => uint256) public decreaseOrdersIndex;
-    mapping (address => mapping(uint256 => SwapOrder)) public swapOrders;
-    mapping (address => uint256) public swapOrdersIndex;
+    mapping(address => mapping(uint256 => IncreaseOrder)) public increaseOrders;
+    mapping(address => uint256) public increaseOrdersIndex;
+    mapping(address => mapping(uint256 => DecreaseOrder)) public decreaseOrders;
+    mapping(address => uint256) public decreaseOrdersIndex;
+    mapping(address => mapping(uint256 => SwapOrder)) public swapOrders;
+    mapping(address => uint256) public swapOrdersIndex;
 
     address public gov;
     address public wklay;
@@ -215,14 +215,7 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         uint256 executionFee
     );
 
-    event Initialize(
-        address router,
-        address vault,
-        address wklay,
-        address usdl,
-        uint256 minExecutionFee,
-        uint256 minPurchaseTokenAmountUsd
-    );
+    event Initialize(address router, address vault, address wklay, address usdl, uint256 minExecutionFee, uint256 minPurchaseTokenAmountUsd);
     event UpdateMinExecutionFee(uint256 minExecutionFee);
     event UpdateMinPurchaseTokenAmountUsd(uint256 minPurchaseTokenAmountUsd);
     event UpdateGov(address gov);
@@ -279,17 +272,25 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         emit UpdateGov(_gov);
     }
 
-    function getSwapOrder(address _account, uint256 _orderIndex) override public view returns (
-        address path0,
-        address path1,
-        address path2,
-        uint256 amountIn,
-        uint256 minOut,
-        uint256 triggerRatio,
-        bool triggerAboveThreshold,
-        bool shouldUnwrap,
-        uint256 executionFee
-    ) {
+    function getSwapOrder(
+        address _account,
+        uint256 _orderIndex
+    )
+        public
+        view
+        override
+        returns (
+            address path0,
+            address path1,
+            address path2,
+            uint256 amountIn,
+            uint256 minOut,
+            uint256 triggerRatio,
+            bool triggerAboveThreshold,
+            bool shouldUnwrap,
+            uint256 executionFee
+        )
+    {
         SwapOrder memory order = swapOrders[_account][_orderIndex];
         return (
             order.path.length > 0 ? order.path[0] : address(0),
@@ -344,30 +345,11 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         uint256 _executionFee
     ) private {
         uint256 _orderIndex = swapOrdersIndex[_account];
-        SwapOrder memory order = SwapOrder(
-            _account,
-            _path,
-            _amountIn,
-            _minOut,
-            _triggerRatio,
-            _triggerAboveThreshold,
-            _shouldUnwrap,
-            _executionFee
-        );
+        SwapOrder memory order = SwapOrder(_account, _path, _amountIn, _minOut, _triggerRatio, _triggerAboveThreshold, _shouldUnwrap, _executionFee);
         swapOrdersIndex[_account] = _orderIndex.add(1);
         swapOrders[_account][_orderIndex] = order;
 
-        emit CreateSwapOrder(
-            _account,
-            _orderIndex,
-            _path,
-            _amountIn,
-            _minOut,
-            _triggerRatio,
-            _triggerAboveThreshold,
-            _shouldUnwrap,
-            _executionFee
-        );
+        emit CreateSwapOrder(_account, _orderIndex, _path, _amountIn, _minOut, _triggerRatio, _triggerAboveThreshold, _shouldUnwrap, _executionFee);
     }
 
     function cancelMultiple(
@@ -421,10 +403,7 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         return redemptionAmount.mul(otherTokenPrice).div(10 ** otherTokenDecimals);
     }
 
-    function validateSwapOrderPriceWithTriggerAboveThreshold(
-        address[] memory _path,
-        uint256 _triggerRatio
-    ) public view returns (bool) {
+    function validateSwapOrderPriceWithTriggerAboveThreshold(address[] memory _path, uint256 _triggerRatio) public view returns (bool) {
         require(_path.length == 2 || _path.length == 3, "OrderBook: invalid _path.length");
 
         // limit orders don't need this validation because minOut is enough
@@ -480,17 +459,14 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         );
     }
 
-    function executeSwapOrder(address _account, uint256 _orderIndex, address payable _feeReceiver) override external nonReentrant {
+    function executeSwapOrder(address _account, uint256 _orderIndex, address payable _feeReceiver) external override nonReentrant {
         SwapOrder memory order = swapOrders[_account][_orderIndex];
         require(order.account != address(0), "OrderBook: non-existent order");
 
         if (order.triggerAboveThreshold) {
             // gas optimisation
             // order.minAmount should prevent wrong price execution in case of simple limit order
-            require(
-                validateSwapOrderPriceWithTriggerAboveThreshold(order.path, order.triggerRatio),
-                "OrderBook: invalid price for execution"
-            );
+            require(validateSwapOrderPriceWithTriggerAboveThreshold(order.path, order.triggerRatio), "OrderBook: invalid price for execution");
         }
 
         delete swapOrders[_account][_orderIndex];
@@ -529,8 +505,7 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         bool _maximizePrice,
         bool _raise
     ) public view returns (uint256, bool) {
-        uint256 currentPrice = _maximizePrice
-            ? IVault(vault).getMaxPrice(_indexToken) : IVault(vault).getMinPrice(_indexToken);
+        uint256 currentPrice = _maximizePrice ? IVault(vault).getMaxPrice(_indexToken) : IVault(vault).getMinPrice(_indexToken);
         bool isPriceValid = _triggerAboveThreshold ? currentPrice > _triggerPrice : currentPrice < _triggerPrice;
         if (_raise) {
             require(isPriceValid, "OrderBook: invalid price for execution");
@@ -538,16 +513,24 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         return (currentPrice, isPriceValid);
     }
 
-    function getDecreaseOrder(address _account, uint256 _orderIndex) override public view returns (
-        address collateralToken,
-        uint256 collateralDelta,
-        address indexToken,
-        uint256 sizeDelta,
-        bool isLong,
-        uint256 triggerPrice,
-        bool triggerAboveThreshold,
-        uint256 executionFee
-    ) {
+    function getDecreaseOrder(
+        address _account,
+        uint256 _orderIndex
+    )
+        public
+        view
+        override
+        returns (
+            address collateralToken,
+            uint256 collateralDelta,
+            address indexToken,
+            uint256 sizeDelta,
+            bool isLong,
+            uint256 triggerPrice,
+            bool triggerAboveThreshold,
+            uint256 executionFee
+        )
+    {
         DecreaseOrder memory order = decreaseOrders[_account][_orderIndex];
         return (
             order.collateralToken,
@@ -561,17 +544,25 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         );
     }
 
-    function getIncreaseOrder(address _account, uint256 _orderIndex) override public view returns (
-        address purchaseToken,
-        uint256 purchaseTokenAmount,
-        address collateralToken,
-        address indexToken,
-        uint256 sizeDelta,
-        bool isLong,
-        uint256 triggerPrice,
-        bool triggerAboveThreshold,
-        uint256 executionFee
-    ) {
+    function getIncreaseOrder(
+        address _account,
+        uint256 _orderIndex
+    )
+        public
+        view
+        override
+        returns (
+            address purchaseToken,
+            uint256 purchaseTokenAmount,
+            address collateralToken,
+            address indexToken,
+            uint256 sizeDelta,
+            bool isLong,
+            uint256 triggerPrice,
+            bool triggerAboveThreshold,
+            uint256 executionFee
+        )
+    {
         IncreaseOrder memory order = increaseOrders[_account][_orderIndex];
         return (
             order.purchaseToken,
@@ -731,19 +722,13 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         );
     }
 
-    function executeIncreaseOrder(address _address, uint256 _orderIndex, address payable _feeReceiver) override external nonReentrant {
+    function executeIncreaseOrder(address _address, uint256 _orderIndex, address payable _feeReceiver) external override nonReentrant {
         IncreaseOrder memory order = increaseOrders[_address][_orderIndex];
         require(order.account != address(0), "OrderBook: non-existent order");
 
         // increase long should use max price
         // increase short should use min price
-        (uint256 currentPrice, ) = validatePositionOrderPrice(
-            order.triggerAboveThreshold,
-            order.triggerPrice,
-            order.indexToken,
-            order.isLong,
-            true
-        );
+        (uint256 currentPrice, ) = validatePositionOrderPrice(order.triggerAboveThreshold, order.triggerPrice, order.indexToken, order.isLong, true);
 
         delete increaseOrders[_address][_orderIndex];
 
@@ -792,16 +777,7 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
 
         require(msg.value > minExecutionFee, "OrderBook: insufficient execution fee");
 
-        _createDecreaseOrder(
-            msg.sender,
-            _collateralToken,
-            _collateralDelta,
-            _indexToken,
-            _sizeDelta,
-            _isLong,
-            _triggerPrice,
-            _triggerAboveThreshold
-        );
+        _createDecreaseOrder(msg.sender, _collateralToken, _collateralDelta, _indexToken, _sizeDelta, _isLong, _triggerPrice, _triggerAboveThreshold);
     }
 
     function _createDecreaseOrder(
@@ -843,19 +819,13 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         );
     }
 
-    function executeDecreaseOrder(address _address, uint256 _orderIndex, address payable _feeReceiver) override external nonReentrant {
+    function executeDecreaseOrder(address _address, uint256 _orderIndex, address payable _feeReceiver) external override nonReentrant {
         DecreaseOrder memory order = decreaseOrders[_address][_orderIndex];
         require(order.account != address(0), "OrderBook: non-existent order");
 
         // decrease long should use min price
         // decrease short should use max price
-        (uint256 currentPrice, ) = validatePositionOrderPrice(
-            order.triggerAboveThreshold,
-            order.triggerPrice,
-            order.indexToken,
-            !order.isLong,
-            true
-        );
+        (uint256 currentPrice, ) = validatePositionOrderPrice(order.triggerAboveThreshold, order.triggerPrice, order.indexToken, !order.isLong, true);
 
         delete decreaseOrders[_address][_orderIndex];
 
@@ -970,11 +940,14 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
     function _vaultSwap(address _tokenIn, address _tokenOut, uint256 _minOut, address _receiver) private returns (uint256) {
         uint256 amountOut;
 
-        if (_tokenOut == usdl) { // buyUSDL
+        if (_tokenOut == usdl) {
+            // buyUSDL
             amountOut = IVault(vault).buyUSDL(_tokenIn, _receiver);
-        } else if (_tokenIn == usdl) { // sellUSDL
+        } else if (_tokenIn == usdl) {
+            // sellUSDL
             amountOut = IVault(vault).sellUSDL(_tokenOut, _receiver);
-        } else { // swap
+        } else {
+            // swap
             amountOut = IVault(vault).swap(_tokenIn, _tokenOut, _receiver);
         }
 
